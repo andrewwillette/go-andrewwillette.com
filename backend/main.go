@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,7 +17,10 @@ func handleRequests() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func handle_new_request(w http.ResponseWriter, r *http.Request) {
+/**
+basic response with test values in json form
+ */
+func handleNewRequest(w http.ResponseWriter, r *http.Request) {
 	//w.WriteHeader(http.StatusCreated)
 	//w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application-json")
@@ -24,19 +28,30 @@ func handle_new_request(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,PATCH,OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
 	resp := make(map[string]string)
-	resp["song_one"] = "Status Swagged Out"
+	resp["song_one"] = "Status out out"
 	resp["song_two"] = "Swag"
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		log.Fatalf("Error occurred in JSON marshal. Err: %s", err)
 	}
-	w.Write(jsonResp)
+	_, err = w.Write(jsonResp)
+	if err != nil {
+		log.Fatalf("Error occurred when writing response Err: %s", err)
+		return
+	}
 	return
+}
+
+func handleGetSoundcloudUrls(w http.ResponseWriter, r *http.Request) {
+	soundcloudUrls := models.SoundCloudUpload{
+		Url: "soundcloud.com",
+	}
+	json.NewEncoder(w).Encode(soundcloudUrls)
 }
 
 func main() {
 	//handleRequests()
-	handler := http.HandlerFunc(handle_new_request)
+	handler := http.HandlerFunc(handleGetSoundcloudUrls)
 	http.Handle("/", handler)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
