@@ -2,27 +2,43 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
 )
 
 const SqlLiteDatabaseFileName = "sqlite-database.db"
+const soundcloudTable = "soundcloudUrl"
 
+// InitDatabase Creates database if it doesn't currently exist.
 func InitDatabase() {
-	os.Remove(SqlLiteDatabaseFileName) // I delete the file to avoid duplicated records. SQLite is a file based database.
-
-	log.Println("Creating sqlite-database.db...")
-	file, err := os.Create("sqlite-database.db") // Create SQLite file
-	if err != nil {
-		log.Fatal(err.Error())
+	if _, err := os.Stat(SqlLiteDatabaseFileName); os.IsNotExist(err) {
+		log.Println("Creating sqlite-database.db...")
+		file, err := os.Create(SqlLiteDatabaseFileName) // Create SQLite file
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		file.Close()
+		log.Println("sqlite-database.db created")
+		sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
+		defer sqliteDatabase.Close()
+		createTable(sqliteDatabase)
 	}
-	file.Close()
-	log.Println("sqlite-database.db created")
+}
 
-	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
-	//defer sqliteDatabase.Close()
-	createTable(sqliteDatabase)
+func addSoundcloudUrlDb(url string) {
+	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+	defer db.Close()
+	insertSoundcloudSQL := `INSERT INTO soundcloudUrl(url) VALUES (?)`
+	addSoundcloudPreparedStatement, err := db.Prepare(insertSoundcloudSQL) // Prepare statement. This is good to avoid SQL injections
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = addSoundcloudPreparedStatement.Exec(url)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 }
 
 func createTable(db *sql.DB) {
@@ -46,31 +62,35 @@ func createTable(db *sql.DB) {
 	log.Println("soundcloud table created")
 }
 
-func addSoundcloudUrl(url string) {
+// get all soundcloud urls in database
+func getAllSoundcloudUrls() []string {
 	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
-	defer db.Close()
-	insertSoundcloudSQL := `INSERT INTO soundcloudUrl(url) VALUES (?)`
-	statement, err := db.Prepare(insertSoundcloudSQL) // Prepare statement. This is good to avoid SQL injections
 	if err != nil {
-		log.Fatalln(err.Error())
+		fmt.Println("error reading sqlite database in getAllSoundcloudUrls")
+		fmt.Println(err.Error())
+		return nil
 	}
-	_, err = statement.Exec(url)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-}
-
-func GetAllSoundcloudUrls() {
-	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
 	defer db.Close()
-	row, err := db.Query("SELECT * FROM soundcloudUrl ORDER BY url")
+	row, err := db.Query("SELECT * FROM soundcloudUrl;")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error selecting all from soundcloudUrl table")
+		fmt.Println(err.Error())
+		return nil
 	}
 	defer row.Close()
+	var soundcloudUrls []string
 	for row.Next() { // Iterate and fetch the records from result cursor
 		var url string
-		row.Scan(&url)
-		log.Println("SoundcloudUrl: ", url)
+		var urlTwo string
+		err := row.Scan(&url, &urlTwo)
+		if err != nil {
+			fmt.Println("error reading url")
+			fmt.Println(err.Error())
+			return nil
+		}
+		soundcloudUrls = append(soundcloudUrls, urlTwo)
+		log.Println("SoundcloudUrl: ", urlTwo)
 	}
+	log.Println(soundcloudUrls)
+	return soundcloudUrls
 }

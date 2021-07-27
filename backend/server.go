@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,9 +16,8 @@ func handleRequests() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-/**
-basic response with test values in json form
-*/
+
+// response "hello world"
 func handleNewRequest(w http.ResponseWriter, r *http.Request) {
 	//w.WriteHeader(http.StatusCreated)
 	//w.WriteHeader(http.StatusOK)
@@ -42,16 +40,42 @@ func handleNewRequest(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func handleGetSoundcloudUrls(w http.ResponseWriter, r *http.Request) {
-	soundcloudUrls := models.SoundCloudUpload{
-		Url: "soundcloud.com",
+type soundcloudGet struct {
+	Urls []string
+}
+
+func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application-json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	soundcloudUrls := soundcloudGet {
+		Urls: getAllSoundcloudUrls(),
 	}
+
 	json.NewEncoder(w).Encode(soundcloudUrls)
 }
 
-func run_server() {
-	handler := http.HandlerFunc(handleGetSoundcloudUrls)
-	http.Handle("/", handler)
+type soundcloudPost struct {
+	Url string `json:"url"`
+}
+
+func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var soundcloudData soundcloudPost
+	err := decoder.Decode(&soundcloudData)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	addSoundcloudUrlDb(soundcloudData.Url)
+}
+
+func runServer() {
+	handler := http.HandlerFunc(soundcloudUrlsGet)
+	http.Handle("/get-soundcloud-urls", handler)
+
+	soundcloudHandler := http.HandlerFunc(soundcloudUrlPost)
+	http.Handle("/add-soundcloud", soundcloudHandler)
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("Failed to listen and serve to port 8080")

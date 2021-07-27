@@ -3,7 +3,8 @@ package main
 func main() {
 	//handleRequests()
 	InitDatabase()
-	GetAllSoundcloudUrls()
+	//GetAllSoundcloudUrls()
+	runServer()
 	//for soundCloudUrls.Next() {
 	//
 	//}

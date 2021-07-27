@@ -3,27 +3,10 @@ import logo from '../logo.svg';
 import './App.css';
 import './audio/AudioPlayer'
 import {AudioPlayer} from "./audio/AudioPlayer";
+import {getAllSoundcloudUrls} from "../services/andrewwillette";
 
-async function http<T>(
-    request: RequestInfo
-): Promise<T> {
-    const response = await fetch(request);
-    return await response.json();
-}
 
-interface BasicResponse {
-    song_one: string;
-    song_two: string;
-}
-
-const data = http<BasicResponse[]>(
-    "http://localhost:8080"
-);
-
-console.log("here1");
-console.log(data.then((todo) => {
-    console.log(todo);
-}));
+getAllSoundcloudUrls();
 
 // function getUsers() {
 //     var api_response = fetch("http://localhost:8080").then((response:Response) => {
