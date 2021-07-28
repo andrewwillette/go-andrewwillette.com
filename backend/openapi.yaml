@@ -1,0 +1,61 @@
+openapi: 3.0.4
+
+info:
+  title: andrewwillette.com REST API
+  description: A rest API which provides resources for maintaining my personal website.
+  version: 1.0.0
+  contact:
+    name: Andrew Willette
+    email: willette.andrew1846@gmail.com
+paths:
+  /get-soundcloud-urls:
+    get:
+      summary: Get soundcloud urls
+      operationId: getSoundcloudUrls
+      description: Retrieves all soundcloud urls
+      tags:
+        - Soundcloud Management
+      responses:
+        200:
+          description: soundcloud urls were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SoundcloudUrl"
+  /add-soundcloud-url:
+    put:
+      summary: Add soundcloud url
+      operationId: addSoundcloudUrl
+      description: Adds a souncloud url to persistence
+      tags:
+        - Soundcloud Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SoundcloudUrl"
+      responses:
+        200:
+          description: The url was successfully added
+  /delete-soundcloud-url:
+    delete:
+      summary: Delete soundcloud url
+      operationId: deleteSoundcloudUrl
+      description: Deletes a soundcloud url from persistence
+      tags:
+        - Soundcloud Management
+      responses:
+        200:
+          description: soundcloud url was successfully deleted
+components:
+  schemas:
+    SoundcloudUrl:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: the soundcloud url for generating soundcloud gui
