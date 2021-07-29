@@ -1,21 +1,6 @@
-Data Models
-
-privileged users can go to add url's
-
-struct SoundcloudUrl {
-    url
-}
-
-struct user {
-    username
-    password
-}
-
 # Backend
-1. API handling music data
+1. REST API for managing application
 
 # Frontend
-1. Single page react app serving of website
+1. Single page react app with dependency on REST API
 
-# Open questions
-1. What endpoint serves react SPA?
