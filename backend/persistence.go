@@ -41,6 +41,20 @@ func addSoundcloudUrlDb(url string) {
 	}
 }
 
+func deleteSoundcloudUrlDb(url string) {
+	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+	defer db.Close()
+	insertSoundcloudSQL := `DELETE FROM soundcloudUrl WHERE url = (?)`
+	deleteSoundcloudPreparedStatement, err := db.Prepare(insertSoundcloudSQL) // Prepare statement. This is good to avoid SQL injections
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = deleteSoundcloudPreparedStatement.Exec(url)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+}
+
 func createTable(db *sql.DB) {
 	createSoundcloudTableSQL := `CREATE TABLE soundcloudUrl (
 		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,

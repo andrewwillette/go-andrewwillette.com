@@ -1,5 +1,4 @@
-export {getAllSoundcloudUrls};
-export type {SoundcloudUrls};
+export {getSoundcloudUrls};
 
 async function http<T>(
     request: RequestInfo
@@ -12,13 +11,13 @@ async function http<T>(
 interface HttpResponse<T> extends Response {
     parsedBody?: T;
 }
-// represents json with list of soundcloud urls
-interface SoundcloudUrls {
-    Urls: string[];
+
+export interface SoundcloudUrl {
+    url: string
 }
 
-async function getAllSoundcloudUrls(): Promise<HttpResponse<SoundcloudUrls>> {
-    const data : Promise<HttpResponse<SoundcloudUrls>> = http<SoundcloudUrls>(
+async function getSoundcloudUrls(): Promise<HttpResponse<SoundcloudUrl[]>> {
+    const data : Promise<HttpResponse<SoundcloudUrl[]>> = http<SoundcloudUrl[]>(
         "http://localhost:8080/get-soundcloud-urls"
     );
     return await data;

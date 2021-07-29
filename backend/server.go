@@ -50,5 +50,11 @@ func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
-
+	decoder := json.NewDecoder(r.Body)
+	var soundcloudData models.SoundcloudUrl
+	err := decoder.Decode(&soundcloudData)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	deleteSoundcloudUrlDb(soundcloudData.Url)
 }
