@@ -2,7 +2,7 @@ openapi: 3.0.4
 
 info:
   title: andrewwillette.com REST API
-  description: A rest API which provides resources for maintaining my personal website.
+  description: A rest API which provides resources for my personal website.
   version: 1.0.0
   contact:
     name: Andrew Willette
@@ -28,7 +28,7 @@ paths:
     put:
       summary: Add soundcloud url
       operationId: addSoundcloudUrl
-      description: Adds a souncloud url to persistence
+      description: Adds a souncloud url
       tags:
         - Soundcloud Management
       requestBody:
@@ -43,9 +43,14 @@ paths:
     delete:
       summary: Delete soundcloud url
       operationId: deleteSoundcloudUrl
-      description: Deletes a soundcloud url from persistence
+      description: Deletes a soundcloud url
       tags:
         - Soundcloud Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SoundcloudUrl"
       responses:
         200:
           description: soundcloud url was successfully deleted
