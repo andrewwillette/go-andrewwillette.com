@@ -2,7 +2,7 @@ openapi: 3.0.4
 
 info:
   title: andrewwillette.com REST API
-  description: A rest API which provides resources for my personal website.
+  description: Rest API which provides resources for my personal website.
   version: 1.0.0
   contact:
     name: Andrew Willette
@@ -54,6 +54,21 @@ paths:
       responses:
         200:
           description: soundcloud url was successfully deleted
+  /login:
+    post:
+      summary: Login to andrewwillette.com
+      operationId: siteLogin
+      description: Authenticate to andrewwillette.com
+      tags:
+        - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCredentials"
+      responses:
+        200:
+          description: user successfully authenticated
 components:
   schemas:
     SoundcloudUrl:
@@ -64,3 +79,15 @@ components:
         url:
           type: string
           description: the soundcloud url for generating soundcloud gui
+    UserCredentials:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: the user's username
+        password:
+          type: string
+          description: the user's password

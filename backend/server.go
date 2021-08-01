@@ -10,6 +10,7 @@ import (
 const getUrl = "/get-soundcloud-urls"
 const putUrl = "/add-soundcloud-url"
 const deleteUrl = "/delete-soundcloud-url"
+const loginUrl = "/login"
 
 func runServer() {
 	getHandler := http.HandlerFunc(soundcloudUrlsGet)
@@ -20,6 +21,9 @@ func runServer() {
 
 	deleteHandler := http.HandlerFunc(soundcloudUrlDelete)
 	http.Handle(deleteUrl, deleteHandler)
+
+	loginHandler := http.HandlerFunc(loginPost)
+	http.Handle(loginUrl, loginHandler)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -36,7 +40,11 @@ func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(urls); i++ {
 		toReturn = append(toReturn, models.SoundcloudUrl{Url: urls[i]})
 	}
-	json.NewEncoder(w).Encode(toReturn)
+	err := json.NewEncoder(w).Encode(toReturn)
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
 }
 
 func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +54,7 @@ func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	addSoundcloudUrlDb(soundcloudData.Url)
+	addSoundcloudUrl(soundcloudData.Url)
 }
 
 func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
@@ -57,4 +65,16 @@ func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf(err.Error())
 	}
 	deleteSoundcloudUrlDb(soundcloudData.Url)
+}
+
+func loginPost(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var userCredentials models.UserCredentials
+	err := decoder.Decode(&userCredentials)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	// how to handle checking if username / password are correct?
+	println(userCredentials.Username)
+	println(userCredentials.Password)
 }
