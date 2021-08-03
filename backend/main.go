@@ -2,13 +2,8 @@ package main
 
 func main() {
 	//handleRequests()
-	InitDatabase()
-	createUserTable()
+	//InitDatabase()
+	//createUserTable()
 	//GetAllSoundcloudUrls()
-	// runServer()
-	//for soundCloudUrls.Next() {
-	//
-	//}
-	//soundCloudUrls.
-	//println(vars)
+	runServer()
 }

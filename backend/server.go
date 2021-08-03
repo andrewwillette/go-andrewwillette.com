@@ -1,8 +1,9 @@
 package main
 
 import (
-	"./models"
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -36,11 +37,11 @@ func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	urls := getAllSoundcloudUrls()
-	var toReturn []models.SoundcloudUrl
+	var soundcloudUrls []SoundcloudUrl
 	for i := 0; i < len(urls); i++ {
-		toReturn = append(toReturn, models.SoundcloudUrl{Url: urls[i]})
+		soundcloudUrls = append(soundcloudUrls, SoundcloudUrl{Url: urls[i]})
 	}
-	err := json.NewEncoder(w).Encode(toReturn)
+	err := json.NewEncoder(w).Encode(soundcloudUrls)
 	if err != nil {
 		log.Fatal(err.Error())
 		return
@@ -49,7 +50,7 @@ func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 
 func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData models.SoundcloudUrl
+	var soundcloudData SoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -59,7 +60,7 @@ func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 
 func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData models.SoundcloudUrl
+	var soundcloudData SoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -69,7 +70,7 @@ func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
 
 func loginPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var userCredentials models.UserCredentials
+	var userCredentials UserCredentials
 	err := decoder.Decode(&userCredentials)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -77,4 +78,15 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	// how to handle checking if username / password are correct?
 	println(userCredentials.Username)
 	println(userCredentials.Password)
+	userExists := userCredentialsExists(userCredentials)
+	if userExists {
+		key := make([]byte, 64)
+		_, err := rand.Read(key)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		println(string(key))
+	}
+	fmt.Println(userExists)
 }
+

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./models"
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
@@ -66,8 +65,8 @@ func createUserTable() {
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s (" +
 		"\"username\" TEXT NOT NULL," +
 		"\"password\" TEXT NOT NULL" +
+		"\"sessionKey\" BLOB" +
 		")", userTable)
-	log.Println("Creating user credentials table.")
 	statement, err := sqliteDatabase.Prepare(createSoundcloudTableSQL) // Prepare SQL Statement
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -76,20 +75,59 @@ func createUserTable() {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	log.Println("User credential table created.")
 }
 
-func addUserCredentials(username string, password string) {
+func addUserCredentials(username string, password string, sessionKey []byte) {
 	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
-	defer db.Close()
-	insertUrlStatement := fmt.Sprintf("INSERT INTO %s(username, password) VALUES (?, ?)", soundcloudTable)
-	addSoundcloudPreparedStatement, err := db.Prepare(insertUrlStatement)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	_, err = addSoundcloudPreparedStatement.Exec(username, password)
+	defer db.Close()
+	addUserWithSessionKey := fmt.Sprintf("INSERT INTO %s(username, password, sessionKey) VALUES (%s, %s, %s)", userTable, username, password, sessionKey)
+	addUserWithSessionKeyStatement, err := db.Prepare(addUserWithSessionKey)
 	if err != nil {
 		log.Fatalln(err.Error())
+	}
+	_, err = addUserWithSessionKeyStatement.Exec(username, password)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+}
+
+func addUserSessionKey(username, password string, sessionKey []byte) {
+
+}
+
+func userCredentialsExists(credentials UserCredentials) bool {
+	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer db.Close()
+	userExistsStatement := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE username = "%s" AND password = "%s")`, userTable, credentials.Username, credentials.Password)
+	println(userExistsStatement)
+	preparedStatement, err := db.Prepare(userExistsStatement)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	//result, err := preparedStatement.Exec(sql.Named("username", credentials.Username), sql.Named("password", credentials.Password))
+	rows, err := preparedStatement.Query()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer rows.Close()
+	var success string
+	for rows.Next() {
+		err := rows.Scan(&success)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		break
+	}
+	if success == "1" {
+		return true
+	} else {
+		return false
 	}
 }
 
@@ -134,7 +172,7 @@ func getAllSoundcloudUrls() []string {
 	return soundcloudUrls
 }
 
-func getAdminUsernamePassword() models.UserCredentials {
+func getAdminUsernamePassword() UserCredentials {
 	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -146,7 +184,7 @@ func getAdminUsernamePassword() models.UserCredentials {
 		log.Fatalln(err.Error())
 	}
 	defer row.Close()
-	var credentialModel models.UserCredentials
+	var credentialModel UserCredentials
 	for row.Next() { // Iterate and fetch the records from result cursor
 		var username string
 		var password string
@@ -154,7 +192,7 @@ func getAdminUsernamePassword() models.UserCredentials {
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
-		credentialModel = models.UserCredentials{Username: username, Password: password}
+		credentialModel = UserCredentials{Username: username, Password: password}
 		break
 	}
 	return credentialModel
