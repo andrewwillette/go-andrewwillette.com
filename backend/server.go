@@ -1,7 +1,8 @@
 package main
 
 import (
-	"crypto/rand"
+	"willette_site/models"
+	"willette_site/persistence"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -36,10 +37,10 @@ func runServer() {
 func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	urls := getAllSoundcloudUrls()
-	var soundcloudUrls []SoundcloudUrl
+	urls := persistence.GetAllSoundcloudUrls()
+	var soundcloudUrls []models.SoundcloudUrl
 	for i := 0; i < len(urls); i++ {
-		soundcloudUrls = append(soundcloudUrls, SoundcloudUrl{Url: urls[i]})
+		soundcloudUrls = append(soundcloudUrls, models.SoundcloudUrl{Url: urls[i]})
 	}
 	err := json.NewEncoder(w).Encode(soundcloudUrls)
 	if err != nil {
@@ -50,42 +51,41 @@ func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 
 func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData SoundcloudUrl
+	var soundcloudData models.SoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	addSoundcloudUrl(soundcloudData.Url)
+	persistence.AddSoundcloudUrl(soundcloudData.Url)
 }
 
 func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData SoundcloudUrl
+	var soundcloudData models.SoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	deleteSoundcloudUrlDb(soundcloudData.Url)
+	persistence.DeleteSoundcloudUrlDb(soundcloudData.Url)
 }
 
 func loginPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var userCredentials UserCredentials
+	var userCredentials models.UserCredentials
 	err := decoder.Decode(&userCredentials)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	// how to handle checking if username / password are correct?
-	println(userCredentials.Username)
-	println(userCredentials.Password)
-	userExists := userCredentialsExists(userCredentials)
+	userExists := persistence.UserCredentialsExists(userCredentials)
 	if userExists {
-		key := make([]byte, 64)
-		_, err := rand.Read(key)
+		key := NewSHA1Hash()
+		var sessionKey models.SessionKey
+		sessionKey.SessionKey = key
+		persistence.UpdateUserSessionKey(userCredentials.Username, userCredentials.Password, key)
+		err := json.NewEncoder(w).Encode(sessionKey)
 		if err != nil {
-			log.Fatalln(err.Error())
+			log.Fatalf(err.Error())
 		}
-		println(string(key))
 	}
 	fmt.Println(userExists)
 }
