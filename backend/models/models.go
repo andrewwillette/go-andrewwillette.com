@@ -9,6 +9,6 @@ type UserCredentials struct {
 	Password string `json:"password"`
 }
 
-type SessionKey struct {
-	SessionKey string `json:"sessionKey"`
+type BearerToken struct {
+	BearerToken string `json:"bearerToken"`
 }

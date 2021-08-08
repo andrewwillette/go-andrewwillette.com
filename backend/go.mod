@@ -1,4 +1,4 @@
-module willette_site
+module github.com/andrewwillette/willette_api
 
 go 1.16
 

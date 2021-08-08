@@ -9,7 +9,11 @@ export class AudioPage extends Component<any, any> {
     }
     componentDidMount() {
         var soundcloudUrls  = getSoundcloudUrls();
-        soundcloudUrls.then(soundcloudUrls => this.setState({soundcloudUrls: soundcloudUrls.parsedBody}))
+        soundcloudUrls.then(soundcloudUrls => {
+            this.setState({soundcloudUrls: soundcloudUrls.parsedBody})
+            console.log('here68');
+            console.log(soundcloudUrls);
+        });
     }
 
     renderAudioPlayers(soundcloudUrls: SoundcloudUrl[]) {

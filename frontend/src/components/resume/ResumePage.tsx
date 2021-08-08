@@ -1,9 +1,6 @@
 import React, {Component} from 'react';
 
 export class ResumePage extends Component<any, any> {
-    constructor(props: any) {
-        super(props);
-    }
     render() {
         return (
             <div id="resume-page">
@@ -13,7 +10,7 @@ export class ResumePage extends Component<any, any> {
                 </h3>
                 <ul id="resume-employment">
                     <li>
-                        Cerner <text>2017-2021</text>
+                        Cerner 2017-2021
                         <ul>
                             <li>
                                 Associate Senior Software Engineer - Cloud Identity and Access Management (Cloud IAM)
@@ -21,7 +18,7 @@ export class ResumePage extends Component<any, any> {
                         </ul>
                     </li>
                     <li>
-                        GOM Software International <text>2018-2020</text>
+                        GOM Software International 2018-2020
                         <ul>
                             <li>
                                 Software Engineer - Agricultural Feeding
@@ -29,7 +26,7 @@ export class ResumePage extends Component<any, any> {
                         </ul>
                     </li>
                     <li>
-                        Fiddling Technologies<text>2017-2021</text>
+                        Fiddling Technologies 2017-2021
                         <ul>
                             <li>
                                 President

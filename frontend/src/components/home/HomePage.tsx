@@ -1,9 +1,6 @@
 import React, {Component} from 'react';
 
 export class HomePage extends Component<any, any> {
-    constructor(props: any) {
-        super(props);
-    }
     render() {
         return (
             <div>

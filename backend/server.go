@@ -1,31 +1,30 @@
 package main
 
 import (
-	"willette_site/models"
-	"willette_site/persistence"
 	"encoding/json"
-	"fmt"
+	"github.com/andrewwillette/willette_api/models"
+	"github.com/andrewwillette/willette_api/persistence"
 	"log"
 	"net/http"
 )
 
-const getUrl = "/get-soundcloud-urls"
-const putUrl = "/add-soundcloud-url"
-const deleteUrl = "/delete-soundcloud-url"
-const loginUrl = "/login"
+const getSoundcloudAllEndpoint = "/get-soundcloud-urls"
+const addSoundcloudEndpoint = "/add-soundcloud-url"
+const deleteSoundcloudEndpoint = "/delete-soundcloud-url"
+const loginEndpoint = "/login"
 
 func runServer() {
 	getHandler := http.HandlerFunc(soundcloudUrlsGet)
-	http.Handle(getUrl, getHandler)
+	http.Handle(getSoundcloudAllEndpoint, getHandler)
 
 	putHandler := http.HandlerFunc(soundcloudUrlPost)
-	http.Handle(putUrl, putHandler)
+	http.Handle(addSoundcloudEndpoint, putHandler)
 
 	deleteHandler := http.HandlerFunc(soundcloudUrlDelete)
-	http.Handle(deleteUrl, deleteHandler)
+	http.Handle(deleteSoundcloudEndpoint, deleteHandler)
 
 	loginHandler := http.HandlerFunc(loginPost)
-	http.Handle(loginUrl, loginHandler)
+	http.Handle(loginEndpoint, loginHandler)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -69,24 +68,33 @@ func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
 	persistence.DeleteSoundcloudUrlDb(soundcloudData.Url)
 }
 
+/**
+Logs user in, returns generated bearer token
+ */
 func loginPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var userCredentials models.UserCredentials
 	err := decoder.Decode(&userCredentials)
 	if err != nil {
-		log.Fatalf(err.Error())
+		println("Error decoding user credentials from client")
+		return
 	}
+	w.Header().Set("Content-Type", "application-json")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	userExists := persistence.UserCredentialsExists(userCredentials)
 	if userExists {
 		key := NewSHA1Hash()
-		var sessionKey models.SessionKey
-		sessionKey.SessionKey = key
-		persistence.UpdateUserSessionKey(userCredentials.Username, userCredentials.Password, key)
-		err := json.NewEncoder(w).Encode(sessionKey)
+		var bearerToken models.BearerToken
+		bearerToken.BearerToken = key
+		persistence.UpdateUserBearerToken(userCredentials.Username, userCredentials.Password, key)
+		w.WriteHeader(http.StatusCreated)
+		err = json.NewEncoder(w).Encode(bearerToken)
 		if err != nil {
-			log.Fatalf(err.Error())
+			println("error encoding bearer token")
+			return
 		}
+	} else {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write(nil)
 	}
-	fmt.Println(userExists)
 }
-

@@ -1,7 +1,7 @@
 package persistence
 
 import (
-	"willette_site/models"
+	"github.com/andrewwillette/willette_api/models"
 	"database/sql"
 	"fmt"
 	"log"
@@ -18,7 +18,7 @@ func CreateUserTable() {
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s (" +
 		"\"username\" TEXT NOT NULL, " +
 		"\"password\" TEXT NOT NULL, " +
-		"\"sessionKey\" BLOB" +
+		"\"bearerToken\" BLOB" +
 		")", userTable)
 	println(createSoundcloudTableSQL)
 	statement, err := sqliteDatabase.Prepare(createSoundcloudTableSQL) // Prepare SQL Statement
@@ -32,23 +32,28 @@ func CreateUserTable() {
 }
 
 /*
-To be set after logging in, sessionKey is bearer token of sorts
+To be set after logging in, bearer token
 */
-func UpdateUserSessionKey(username string, password, bearerToken string) {
+func UpdateUserBearerToken(username string, password, bearerToken string) {
 	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 	defer db.Close()
-	addUserWithSessionKey := fmt.Sprintf("UPDATE %s SET bearerToken = %s WHERE username = %s AND password = %s)",
-		userTable, bearerToken, username, password)
+	addUserWithSessionKey := fmt.Sprintf("UPDATE %s SET bearerToken = '%s' WHERE username = '%s'",
+		userTable, bearerToken, username)
+	fmt.Printf("sql to prepare\n%s\n", addUserWithSessionKey)
 	addUserWithSessionKeyStatement, err := db.Prepare(addUserWithSessionKey)
 	if err != nil {
-		log.Fatalln(err.Error())
+		println("in business")
+		println("error preparing bearer token update statement")
+		return
 	}
-	_, err = addUserWithSessionKeyStatement.Exec()
+	result, err := addUserWithSessionKeyStatement.Exec()
+	fmt.Println(result)
 	if err != nil {
-		log.Fatalln(err.Error())
+		println("error executing bearer token update statement")
+		return
 	}
 }
 

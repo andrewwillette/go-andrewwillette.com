@@ -3,7 +3,7 @@ package main
 func main() {
 	//handleRequests()
 	//InitDatabase()
-	//createUserTable()
+	//persistence.CreateUserTable()
 	//GetAllSoundcloudUrls()
 	runServer()
 }
