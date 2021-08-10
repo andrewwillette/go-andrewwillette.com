@@ -1,9 +1,9 @@
 package persistence
 
 import (
-	"github.com/andrewwillette/willette_api/models"
 	"database/sql"
 	"fmt"
+	"github.com/andrewwillette/willette_api/models"
 	"log"
 )
 
@@ -15,12 +15,11 @@ func CreateUserTable() {
 		log.Fatal(err.Error())
 	}
 	defer sqliteDatabase.Close()
-	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s (" +
-		"\"username\" TEXT NOT NULL, " +
-		"\"password\" TEXT NOT NULL, " +
-		"\"bearerToken\" BLOB" +
+	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s ("+
+		"\"username\" TEXT NOT NULL, "+
+		"\"password\" TEXT NOT NULL, "+
+		"\"bearerToken\" BLOB"+
 		")", userTable)
-	println(createSoundcloudTableSQL)
 	statement, err := sqliteDatabase.Prepare(createSoundcloudTableSQL) // Prepare SQL Statement
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -42,17 +41,14 @@ func UpdateUserBearerToken(username string, password, bearerToken string) {
 	defer db.Close()
 	addUserWithSessionKey := fmt.Sprintf("UPDATE %s SET bearerToken = '%s' WHERE username = '%s'",
 		userTable, bearerToken, username)
-	fmt.Printf("sql to prepare\n%s\n", addUserWithSessionKey)
 	addUserWithSessionKeyStatement, err := db.Prepare(addUserWithSessionKey)
 	if err != nil {
-		println("in business")
-		println("error preparing bearer token update statement")
 		return
 	}
-	result, err := addUserWithSessionKeyStatement.Exec()
-	fmt.Println(result)
+	_, err = addUserWithSessionKeyStatement.Exec()
 	if err != nil {
 		println("error executing bearer token update statement")
+		println(err.Error())
 		return
 	}
 }
@@ -92,3 +88,36 @@ func UserCredentialsExists(credentials models.UserCredentials) bool {
 	}
 }
 
+func BearerTokenExists(bearerToken string) bool {
+	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer db.Close()
+	bearerTokenExists := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE bearerToken = "%s")`, userTable, bearerToken)
+	preparedStatement, err := db.Prepare(bearerTokenExists)
+	if err != nil {
+		println("Error parsing ")
+		log.Fatalln(err.Error())
+	}
+	rows, err := preparedStatement.Query()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer rows.Close()
+	var success string
+	for rows.Next() {
+		err := rows.Scan(&success)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		break
+	}
+	fmt.Printf("success is %s\n", success)
+	if success == "1" {
+		return true
+	} else {
+		return false
+	}
+	return true
+}

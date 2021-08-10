@@ -13,7 +13,7 @@ export class ResumePage extends Component<any, any> {
                         Cerner 2017-2021
                         <ul>
                             <li>
-                                Associate Senior Software Engineer - Cloud Identity and Access Management (Cloud IAM)
+                                Software Engineer II - Cloud Identity and Access Management (Cloud IAM)
                             </li>
                         </ul>
                     </li>

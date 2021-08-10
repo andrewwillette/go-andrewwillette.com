@@ -1,7 +1,13 @@
-export {getSoundcloudUrls, login};
+import {getBearerToken} from "../persistence/localstorage";
+
+export {getSoundcloudUrls, login, deleteSoundcloudUrl, addSoundcloudUrl};
 export type {BearerToken, SoundcloudUrl}
 
 const serviceLocation = "http://localhost:8080"
+const getSoundcloudAllEndpoint = "/get-soundcloud-urls"
+const addSoundcloudEndpoint = "/add-soundcloud-url"
+const deleteSoundcloudEndpoint = "/delete-soundcloud-url"
+const loginEndpoint = "/login"
 
 async function http<T>(
     request: RequestInfo, body: any
@@ -38,7 +44,7 @@ interface SoundcloudUrl {
 
 async function getSoundcloudUrls(): Promise<HttpResponse<SoundcloudUrl[]>> {
     const data : Promise<HttpResponse<SoundcloudUrl[]>> = http<SoundcloudUrl[]>(
-        `${serviceLocation}/get-soundcloud-urls`, null
+        `${serviceLocation}${getSoundcloudAllEndpoint}`, null
     );
     return await data;
 }
@@ -51,12 +57,27 @@ interface BearerToken {
 }
 
 /**
- * Attempts login with provided credentials. Returns bearerToken if authentication is successful.
+ * Attempts login with provided credentials. API returns bearerToken if authentication is successful.
  *
  * @param username
  * @param password
  */
 async function login(username: string, password: string) {
-    const data : Promise<HttpResponse<BearerToken>> = http<BearerToken>(`${serviceLocation}/login`, {username, password});
+    const data : Promise<HttpResponse<BearerToken>> = http<BearerToken>(`${serviceLocation}${loginEndpoint}`, {username, password});
+    return await data;
+}
+
+interface ApiResponse {
+    success: boolean
+}
+
+async function deleteSoundcloudUrl(url: string) {
+    console.log('deletesoundcloudurl ts')
+    const data: Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${deleteSoundcloudEndpoint}`, {url, bearerToken: getBearerToken()})
+    return await data;
+}
+
+async function addSoundcloudUrl(url: string) {
+    const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${addSoundcloudEndpoint}`, {url, bearerToken: getBearerToken()});
     return await data;
 }

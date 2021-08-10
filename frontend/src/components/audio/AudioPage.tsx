@@ -8,19 +8,19 @@ export class AudioPage extends Component<any, any> {
         this.state = {soundcloudUrls: []}
     }
     componentDidMount() {
-        var soundcloudUrls  = getSoundcloudUrls();
-        soundcloudUrls.then(soundcloudUrls => {
+        getSoundcloudUrls().then(soundcloudUrls => {
             this.setState({soundcloudUrls: soundcloudUrls.parsedBody})
-            console.log('here68');
-            console.log(soundcloudUrls);
         });
     }
 
     renderAudioPlayers(soundcloudUrls: SoundcloudUrl[]) {
+        if(soundcloudUrls === null) {
+            return <></>;
+        }
         return (
             <>
                 {soundcloudUrls.map((data) => {
-                    return <AudioPlayer soundcloudUrl={data.url}/>
+                    return <AudioPlayer key={data.url} soundcloudUrl={data.url}/>
                 })}
             </>
         )

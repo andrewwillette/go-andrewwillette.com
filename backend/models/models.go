@@ -12,3 +12,8 @@ type UserCredentials struct {
 type BearerToken struct {
 	BearerToken string `json:"bearerToken"`
 }
+
+type AuthenticatedSoundcloudUrl struct {
+	Url string `json:"url"`
+	BearerToken string `json:"bearerToken"`
+}

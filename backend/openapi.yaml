@@ -39,6 +39,8 @@ paths:
       responses:
         200:
           description: The url was successfully added
+        401:
+          description: Unauthorized
   /delete-soundcloud-url:
     delete:
       summary: Delete soundcloud url
@@ -50,10 +52,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SoundcloudUrl"
+              $ref: "#/components/schemas/AuthenticatedSoundcloudUrl"
       responses:
         200:
-          description: soundcloud url was successfully deleted
+          description: Soundcloud url was successfully deleted
+        401:
+          description: Unauthorized
   /login:
     post:
       summary: Login to andrewwillette.com
@@ -68,7 +72,9 @@ paths:
               $ref: "#/components/schemas/UserCredentials"
       responses:
         200:
-          description: user successfully authenticated
+          description: User successfully authenticated
+        401:
+          description: Login failed
 components:
   schemas:
     SoundcloudUrl:
@@ -78,7 +84,19 @@ components:
       properties:
         url:
           type: string
-          description: the soundcloud url for generating soundcloud gui
+          description: the soundcloud url
+    AuthenticatedSoundcloudUrl:
+      type: object
+      required:
+        - url
+        - bearerToken
+      properties:
+        url:
+          type: string
+          description: the soundcloud url
+        bearerToken:
+          type: string
+          description: a valid "BearerToken"
     UserCredentials:
       type: object
       required:
@@ -91,3 +109,11 @@ components:
         password:
           type: string
           description: the user's password
+    BearerToken:
+      type: object
+      required:
+        - bearerToken
+      properties:
+        bearerToken:
+          type: string
+          description: bearerToken for accessing protected resources

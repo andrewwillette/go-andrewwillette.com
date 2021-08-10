@@ -18,7 +18,6 @@ func NewSHA1Hash(n ...int) string {
 	randString := RandomString(noRandomCharacters)
 
 	hash := sha1.New()
-	fmt.Printf("hash is %s\n", hash)
 	hash.Write([]byte(randString))
 	bs := hash.Sum(nil)
 

@@ -17,10 +17,10 @@ func runServer() {
 	getHandler := http.HandlerFunc(soundcloudUrlsGet)
 	http.Handle(getSoundcloudAllEndpoint, getHandler)
 
-	putHandler := http.HandlerFunc(soundcloudUrlPost)
+	putHandler := http.HandlerFunc(addSoundcloudUrlPost)
 	http.Handle(addSoundcloudEndpoint, putHandler)
 
-	deleteHandler := http.HandlerFunc(soundcloudUrlDelete)
+	deleteHandler := http.HandlerFunc(deleteSoundcloudUrlPost)
 	http.Handle(deleteSoundcloudEndpoint, deleteHandler)
 
 	loginHandler := http.HandlerFunc(loginPost)
@@ -48,29 +48,47 @@ func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func soundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
+func addSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application-json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData models.SoundcloudUrl
+	var soundcloudData models.AuthenticatedSoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	persistence.AddSoundcloudUrl(soundcloudData.Url)
+	if persistence.BearerTokenExists(soundcloudData.BearerToken) {
+		persistence.AddSoundcloudUrl(soundcloudData.Url)
+		w.WriteHeader(http.StatusOK)
+		return
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 }
 
-func soundcloudUrlDelete(w http.ResponseWriter, r *http.Request) {
+func deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application-json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData models.SoundcloudUrl
+	var soundcloudData models.AuthenticatedSoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	persistence.DeleteSoundcloudUrlDb(soundcloudData.Url)
+	if persistence.BearerTokenExists(soundcloudData.BearerToken) {
+		persistence.DeleteSoundcloudUrlDb(soundcloudData.Url)
+		w.WriteHeader(http.StatusOK)
+		return
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 }
 
 /**
 Logs user in, returns generated bearer token
- */
+*/
 func loginPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var userCredentials models.UserCredentials
@@ -94,7 +112,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusUnauthorized)
 		w.Write(nil)
 	}
 }
