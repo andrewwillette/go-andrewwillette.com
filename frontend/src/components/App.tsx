@@ -5,8 +5,8 @@ import {AudioPage} from "./audio/AudioPage";
 import {BrowserRouter, Route, Switch, Link} from "react-router-dom"
 import {ResumePage} from "./resume/ResumePage";
 import {HomePage} from "./home/HomePage";
-import {LoginPage} from "./user/LoginPage"
 import {AdminPage} from "./user/AdminPage";
+import {NotFoundPage} from "./error/NotFoundPage";
 
 function App() {
     return (
@@ -24,19 +24,13 @@ function App() {
                             <li>
                                 <Link to="/resume">Resume</Link>
                             </li>
-                            <li>
-                                <Link to="/login">Login</Link>
-                            </li>
-                            <li>
-                                <Link to="/admin">Admin</Link>
-                            </li>
                         </ul>
                         <Switch>
                             <Route exact path="/" component={HomePage}/>
                             <Route exact path="/music" component={AudioPage}/>
                             <Route path="/resume" component={ResumePage}/>
-                            <Route path="/login" component={LoginPage}/>
                             <Route path="/admin" component={AdminPage}/>
+                            <Route path="/*" component={NotFoundPage}/>
                         </Switch>
                     </BrowserRouter>
                 </div>

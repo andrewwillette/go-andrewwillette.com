@@ -1,0 +1,19 @@
+/* resume page */
+.resume-header {
+    text-align: left;
+    border-bottom: 1px solid black;
+}
+
+#resume-page li {
+    list-style-type: none;
+    display: block;
+    margin: .2rem;
+}
+
+#resume-employment li text {
+    float: right;
+}
+#resume-page ul {
+    text-align: left;
+}
+

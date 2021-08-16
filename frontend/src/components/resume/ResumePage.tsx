@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import "./resume.css";
 
 export class ResumePage extends Component<any, any> {
     render() {

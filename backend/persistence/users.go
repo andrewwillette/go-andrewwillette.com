@@ -80,7 +80,6 @@ func UserCredentialsExists(credentials models.UserCredentials) bool {
 		}
 		break
 	}
-	fmt.Printf("success is %s\n", success)
 	if success == "1" {
 		return true
 	} else {
@@ -113,7 +112,6 @@ func BearerTokenExists(bearerToken string) bool {
 		}
 		break
 	}
-	fmt.Printf("success is %s\n", success)
 	if success == "1" {
 		return true
 	} else {

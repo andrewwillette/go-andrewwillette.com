@@ -1,10 +1,14 @@
 import React, {Component} from 'react';
-import {deleteSoundcloudUrl, getSoundcloudUrls, addSoundcloudUrl, SoundcloudUrl} from "../../services/andrewwillette";
+import {deleteSoundcloudUrl, getSoundcloudUrls, addSoundcloudUrl, SoundcloudUrl, login} from "../../services/andrewwillette";
+import {setBearerToken} from "../../persistence/localstorage";
+import {UnauthorizedBanner} from "./UnauthorizedBanner";
 
 export class AdminPage extends Component<any, any> {
     constructor(props: any) {
         super(props);
-        this.state = {soundcloudUrls: []}
+        this.state = {soundcloudUrls: [], unauthorizedReason: null, showLoginSuccess: false}
+
+        this.sendLogin = this.sendLogin.bind(this);
     }
 
     componentDidMount() {
@@ -19,6 +23,11 @@ export class AdminPage extends Component<any, any> {
 
     deleteSoundcloudUrl(soundcloudUrl: string) {
         deleteSoundcloudUrl(soundcloudUrl).then(result => {
+            if(result.status === 201) {
+                this.setState({unauthorizedReason: null});
+            } else {
+                this.setState({unauthorizedReason: "Not logged in, cannot delete URLS"});
+            }
             this.updateSoundcloudUrls();
         });
     }
@@ -26,10 +35,38 @@ export class AdminPage extends Component<any, any> {
     addSoundcloudUrl() {
         const soundcloudUrl = (document.getElementById("addSoundCloudUrlInput") as HTMLInputElement).value;
         addSoundcloudUrl(soundcloudUrl).then(result => {
+            // if result is 401, show unauthorized banner
             this.updateSoundcloudUrls();
         });
     }
 
+    async sendLogin() {
+        let username = (document.getElementById("username") as HTMLInputElement).value;
+        let password = (document.getElementById("password") as HTMLInputElement).value;
+
+        let responsePromise = login(username, password);
+        responsePromise.then(response => {
+            if(response.status === 201) {
+                const token = response.parsedBody?.bearerToken;
+                if(token){
+                    setBearerToken(token)
+                    this.setState({unauthorizedReason: null});
+                }
+            } else {
+                this.setState({unauthorizedReason: "Login Failed"});
+
+                console.log(`status is ${response.status}`)
+            }
+        });
+    }
+
+    renderUnauthorizedBanner(unauthorizedReason: string) {
+        if (unauthorizedReason !== null) {
+            return <UnauthorizedBanner unauthorizedReason={unauthorizedReason}/>
+        } else {
+            return <></>;
+        }
+    }
     renderAudioManagementList(soundcloudUrls: SoundcloudUrl[]) {
         if (soundcloudUrls === null) {
             return <></>;
@@ -38,9 +75,9 @@ export class AdminPage extends Component<any, any> {
             <>
                 {soundcloudUrls.map((data) => {
                     return (
-                        <div>
+                        <div key={data.url}>
                             <p>{data.url}</p>
-                            <button onClick={() => this.deleteSoundcloudUrl(data.url)}>Delete URL</button>
+                            <button key={data.url} onClick={() => this.deleteSoundcloudUrl(data.url)}>Delete URL</button>
                         </div>
                     )
                 })}
@@ -49,9 +86,19 @@ export class AdminPage extends Component<any, any> {
     }
 
     render() {
-        const {soundcloudUrls} = this.state;
+        const {soundcloudUrls, unauthorizedReason} = this.state;
         return (
             <div>
+                <div>
+                    {this.renderUnauthorizedBanner(unauthorizedReason)}
+                </div>
+                <div>
+                    <label htmlFor={"username"}>Username</label>
+                    <input id={"username"} type={"text"}/>
+                    <label htmlFor={"password"}>Password</label>
+                    <input id={"password"} type={"text"}/>
+                    <button onClick={this.sendLogin}>Login</button>
+                </div>
                 {this.renderAudioManagementList(soundcloudUrls)}
                 <input type={"text"} id={"addSoundCloudUrlInput"}/>
                 <button onClick={() => this.addSoundcloudUrl()}>Add URL</button>

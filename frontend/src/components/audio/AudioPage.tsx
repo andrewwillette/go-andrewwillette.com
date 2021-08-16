@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {getSoundcloudUrls, SoundcloudUrl} from "../../services/andrewwillette";
 import {AudioPlayer} from "./AudioPlayer";
+import "./audio.css";
 
 export class AudioPage extends Component<any, any> {
     constructor(props: any) {

@@ -22,6 +22,9 @@ async function http<T>(
                 'Accept-Encoding': 'gzip, deflate, br'
             },
             body: JSON.stringify(body) // body data type must match "Content-Type" header
+        }).catch(reason => {
+            console.log(`reason is ${reason}`)
+            return Promise.reject();
         });
         if(response.status === 201) {
             response.parsedBody = await response.json();
