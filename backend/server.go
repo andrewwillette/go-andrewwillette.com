@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/andrewwillette/willette_api/models"
 	"github.com/andrewwillette/willette_api/persistence"
 	"log"
@@ -12,6 +13,7 @@ const getSoundcloudAllEndpoint = "/get-soundcloud-urls"
 const addSoundcloudEndpoint = "/add-soundcloud-url"
 const deleteSoundcloudEndpoint = "/delete-soundcloud-url"
 const loginEndpoint = "/login"
+const port = 9099
 
 func runServer() {
 	getHandler := http.HandlerFunc(soundcloudUrlsGet)
@@ -26,9 +28,9 @@ func runServer() {
 	loginHandler := http.HandlerFunc(loginPost)
 	http.Handle(loginEndpoint, loginHandler)
 
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
-		log.Fatal("Failed to listen and serve to port 8080")
+		log.Fatal(fmt.Sprintf("Failed to listen and serve to port %d", port))
 		return
 	}
 }
