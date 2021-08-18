@@ -30,6 +30,7 @@ func runServer() {
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
+		println(err.Error())
 		log.Fatal(fmt.Sprintf("Failed to listen and serve to port %d", port))
 		return
 	}
