@@ -9,18 +9,14 @@ import (
 
 const userTable = "userCredentials"
 
-func CreateUserTable() {
-	sqliteDatabase, err := sql.Open("sqlite3", "./sqlite-database.db")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	defer sqliteDatabase.Close()
+func createUserTable(db *sql.DB) {
+	defer db.Close()
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s ("+
 		"\"username\" TEXT NOT NULL, "+
 		"\"password\" TEXT NOT NULL, "+
 		"\"bearerToken\" BLOB"+
 		")", userTable)
-	statement, err := sqliteDatabase.Prepare(createSoundcloudTableSQL) // Prepare SQL Statement
+	statement, err := db.Prepare(createSoundcloudTableSQL) // Prepare SQL Statement
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

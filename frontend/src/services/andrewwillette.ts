@@ -3,7 +3,7 @@ import {getBearerToken} from "../persistence/localstorage";
 export {getSoundcloudUrls, login, deleteSoundcloudUrl, addSoundcloudUrl};
 export type {BearerToken, SoundcloudUrl}
 
-const serviceLocation = "http://localhost:8080"
+const serviceLocation = "http://localhost:9099"
 const getSoundcloudAllEndpoint = "/get-soundcloud-urls"
 const addSoundcloudEndpoint = "/add-soundcloud-url"
 const deleteSoundcloudEndpoint = "/delete-soundcloud-url"

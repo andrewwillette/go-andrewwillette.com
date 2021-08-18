@@ -1,3 +1,5 @@
 backend/backend
-backend/willette_site
+backend/willette_api
 *.db
+
+*nohup.out
