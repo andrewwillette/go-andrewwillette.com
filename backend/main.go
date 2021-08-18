@@ -2,8 +2,8 @@ package main
 
 func main() {
 	//handleRequests()
-	//InitDatabase()
+	InitDatabase()
 	//persistence.CreateUserTable()
 	//GetAllSoundcloudUrls()
-	runServer()
+	//runServer()
 }
