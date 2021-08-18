@@ -19,7 +19,7 @@ func InitDatabase() {
 		file.Close()
 		sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
 		defer sqliteDatabase.Close()
-		//createSoundcloudUrlTable(sqliteDatabase)
+		CreateSoundcloudUrlTable(sqliteDatabase)
 	}
 }
 
