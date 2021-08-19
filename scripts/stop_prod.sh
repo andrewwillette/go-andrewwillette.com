@@ -4,4 +4,4 @@
 kill $(ps|grep willette_api|awk '! /grep/ {print $1}')
 
 # stops the background express server
-kill $(ps|grep node|awk '/go-andrew/ {print $1}')
+kill $(ps|grep node|awk '{print $1}')
