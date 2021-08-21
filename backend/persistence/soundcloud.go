@@ -36,7 +36,10 @@ func DeleteSoundcloudUrlDb(url string) {
 		log.Fatalln(err.Error())
 	}
 }
-func createSoundcloudUrlTable(db *sql.DB) {
+
+// Creates database table for soundcloudUrls
+func createSoundcloudUrlTable(sqliteFile string) {
+	db, err := sql.Open("sqlite3", sqliteFile)
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s ("+
 		"\"id\" integer NOT NULL PRIMARY KEY AUTOINCREMENT,"+
 		"\"url\" TEXT"+
@@ -51,7 +54,7 @@ func createSoundcloudUrlTable(db *sql.DB) {
 	}
 }
 
-// get all soundcloud urls in database
+// GetAllSoundcloudUrls get all soundcloud urls in database
 func GetAllSoundcloudUrls() []string {
 	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
 	if err != nil {

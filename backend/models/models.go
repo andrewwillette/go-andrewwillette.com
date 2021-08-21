@@ -4,7 +4,7 @@ type SoundcloudUrl struct {
 	Url string `json:"url"`
 }
 
-type UserCredentials struct {
+type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }

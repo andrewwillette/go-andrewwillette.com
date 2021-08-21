@@ -89,12 +89,12 @@ func deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/**
-Logs user in, returns generated bearer token
-*/
+// Checks if provided username / password exists.
+// Successful authentication returns a 201 and the created bearer token.
+// Failed authentication returns a 401 Status Unauthorized
 func loginPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var userCredentials models.UserCredentials
+	var userCredentials models.User
 	err := decoder.Decode(&userCredentials)
 	if err != nil {
 		println("Error decoding user credentials from client")
@@ -102,7 +102,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	userExists := persistence.UserCredentialsExists(userCredentials)
+	userExists := persistence.UserExists(userCredentials)
 	if userExists {
 		key := NewSHA1Hash()
 		var bearerToken models.BearerToken
@@ -116,6 +116,5 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write(nil)
 	}
 }

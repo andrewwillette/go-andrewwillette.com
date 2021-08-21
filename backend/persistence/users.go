@@ -9,7 +9,8 @@ import (
 
 const userTable = "userCredentials"
 
-func createUserTable(db *sql.DB) {
+func createUserTable(sqliteFile string) {
+	db, err := sql.Open("sqlite3", sqliteFile)
 	defer db.Close()
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s ("+
 		"\"username\" TEXT NOT NULL, "+
@@ -26,9 +27,26 @@ func createUserTable(db *sql.DB) {
 	}
 }
 
-/*
-To be set after logging in, bearer token
-*/
+func AddUser(username, password, sqliteFile string) error {
+	//"INSERT INTO userCredentials(username, password) VALUES('$username', '$password');"
+	addUserSqlStatement := fmt.Sprintf("INSERT INTO %s(username, password) "+
+		"VALUES('%s', '%s');", userTable, username, password)
+	db, err := sql.Open("sqlite3", sqliteFile)
+	if err != nil {
+		return err
+	}
+	addUserStatement, err := db.Prepare(addUserSqlStatement)
+	if err != nil {
+		return err
+	}
+	_, err = addUserStatement.Exec()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateUserBearerToken Adds the provided bearerToken to the username/password
 func UpdateUserBearerToken(username string, password, bearerToken string) {
 	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
 	if err != nil {
@@ -49,10 +67,36 @@ func UpdateUserBearerToken(username string, password, bearerToken string) {
 	}
 }
 
-/**
-Checks database if username, password exists
-*/
-func UserCredentialsExists(credentials models.UserCredentials) bool {
+func getAllUsers(databaseFile string) ([]models.User, error) {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	selectAllUsers := fmt.Sprintf("SELECT * FROM %s", userTable)
+	selectAllUsersPrepared, err := db.Prepare(selectAllUsers)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := selectAllUsersPrepared.Query()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer rows.Close()
+	var username, password, bearerToken sql.NullString
+	var users []models.User
+	for rows.Next() {
+		err := rows.Scan(&username, &password, &bearerToken)
+		user := models.User{Username: username.String, Password: password.String}
+		users = append(users, user)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+	}
+	return users, nil
+}
+
+// UserExists Checks database if username, password exists
+func UserExists(credentials models.User) bool {
 	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
 	if err != nil {
 		log.Fatalln(err.Error())
