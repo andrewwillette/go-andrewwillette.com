@@ -39,7 +39,7 @@ func runServer() {
 func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	urls := persistence.GetAllSoundcloudUrls()
+	urls := persistence.GetAllSoundcloudUrls(persistence.SqlLiteDatabaseFileName)
 	var soundcloudUrls []models.SoundcloudUrl
 	for i := 0; i < len(urls); i++ {
 		soundcloudUrls = append(soundcloudUrls, models.SoundcloudUrl{Url: urls[i]})
@@ -60,8 +60,8 @@ func addSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	if persistence.BearerTokenExists(soundcloudData.BearerToken) {
-		persistence.AddSoundcloudUrl(soundcloudData.Url)
+	if persistence.BearerTokenExists(soundcloudData.BearerToken, persistence.SqlLiteDatabaseFileName) {
+		persistence.AddSoundcloudUrl(soundcloudData.Url, persistence.SqlLiteDatabaseFileName)
 		w.WriteHeader(http.StatusOK)
 		return
 	} else {
@@ -79,8 +79,8 @@ func deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	if persistence.BearerTokenExists(soundcloudData.BearerToken) {
-		persistence.DeleteSoundcloudUrlDb(soundcloudData.Url)
+	if persistence.BearerTokenExists(soundcloudData.BearerToken, persistence.SqlLiteDatabaseFileName) {
+		persistence.DeleteSoundcloudUrl(soundcloudData.Url)
 		w.WriteHeader(http.StatusOK)
 		return
 	} else {
@@ -102,12 +102,13 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	userExists := persistence.UserExists(userCredentials)
+	user := persistence.User{Username: userCredentials.Username, Password: userCredentials.Password}
+	userExists := persistence.UserExists(user, persistence.SqlLiteDatabaseFileName)
 	if userExists {
 		key := NewSHA1Hash()
 		var bearerToken models.BearerToken
 		bearerToken.BearerToken = key
-		persistence.UpdateUserBearerToken(userCredentials.Username, userCredentials.Password, key)
+		persistence.UpdateUserBearerToken(userCredentials.Username, userCredentials.Password, key, persistence.SqlLiteDatabaseFileName)
 		w.WriteHeader(http.StatusCreated)
 		err = json.NewEncoder(w).Encode(bearerToken)
 		if err != nil {

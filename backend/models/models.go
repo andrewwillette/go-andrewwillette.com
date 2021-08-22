@@ -7,6 +7,7 @@ type SoundcloudUrl struct {
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	BearerToken string `json:"bearerToken"`
 }
 
 type BearerToken struct {

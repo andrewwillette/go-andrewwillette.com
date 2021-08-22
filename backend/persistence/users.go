@@ -47,8 +47,8 @@ func AddUser(username, password, sqliteFile string) error {
 }
 
 // UpdateUserBearerToken Adds the provided bearerToken to the username/password
-func UpdateUserBearerToken(username string, password, bearerToken string) {
-	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+func UpdateUserBearerToken(username, password, bearerToken, sqliteFile string) {
+	db, err := sql.Open("sqlite3", sqliteFile)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -95,14 +95,34 @@ func getAllUsers(databaseFile string) ([]models.User, error) {
 	return users, nil
 }
 
+func GetUser(username, password, sqliteFile string) (User, error) {
+	db, err := sql.Open("sqlite3", sqliteFile)
+	if err != nil {
+		return User{}, err
+	}
+	defer db.Close()
+	getUserStatement := fmt.Sprintf(`SELECT * FROM %s WHERE username = "%s" AND password = "%s" LIMIT 1`, userTable, username, password)
+	preparedStatement, err := db.Prepare(getUserStatement)
+	if err != nil {
+		return User{}, err
+	}
+	row := preparedStatement.QueryRow()
+	user := User{}
+	err = row.Scan(&user.Username, &user.Password, &user.BearerToken)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
 // UserExists Checks database if username, password exists
-func UserExists(credentials models.User) bool {
-	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+func UserExists(user User, sqliteFile string) bool {
+	db, err := sql.Open("sqlite3", sqliteFile)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 	defer db.Close()
-	userExistsStatement := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE username = "%s" AND password = "%s")`, userTable, credentials.Username, credentials.Password)
+	userExistsStatement := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE username = "%s" AND password = "%s")`, userTable, user.Username, user.Password)
 	preparedStatement, err := db.Prepare(userExistsStatement)
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -127,8 +147,8 @@ func UserExists(credentials models.User) bool {
 	}
 }
 
-func BearerTokenExists(bearerToken string) bool {
-	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+func BearerTokenExists(bearerToken, sqliteFile string) bool {
+	db, err := sql.Open("sqlite3", sqliteFile)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

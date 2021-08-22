@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
 	"os"
 )
 
@@ -26,15 +25,22 @@ func createDatabase(databaseFile string) error {
 	return nil
 }
 
-func getAllTables(databaseFile string) string {
+func getAllTables(databaseFile string) ([]string, error) {
 	sqliteDatabase, _ := sql.Open("sqlite3", fmt.Sprintf("./%s", databaseFile))
-	row := sqliteDatabase.QueryRow("SELECT name FROM sqlite_master WHERE type='table';")
-	var success string
-	err := row.Scan(&success)
+	rows, err := sqliteDatabase.Query("SELECT name FROM sqlite_master WHERE type='table';")
 	if err != nil {
-		log.Fatalln(err.Error())
+		return nil, err
 	}
-	return success
+	var table string
+	var tables []string
+	for rows.Next() {
+		err := rows.Scan(&table)
+		tables = append(tables, table)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return tables, nil
 }
 
 // InitDatabaseIdempotent - Creates database if it doesn't currently exist.
