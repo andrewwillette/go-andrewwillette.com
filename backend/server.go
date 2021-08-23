@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/andrewwillette/willette_api/models"
 	"github.com/andrewwillette/willette_api/persistence"
 	"log"
 	"net/http"
@@ -40,9 +39,9 @@ func soundcloudUrlsGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	urls := persistence.GetAllSoundcloudUrls(persistence.SqlLiteDatabaseFileName)
-	var soundcloudUrls []models.SoundcloudUrl
+	var soundcloudUrls []SoundcloudUrl
 	for i := 0; i < len(urls); i++ {
-		soundcloudUrls = append(soundcloudUrls, models.SoundcloudUrl{Url: urls[i]})
+		soundcloudUrls = append(soundcloudUrls, SoundcloudUrl{Url: urls[i]})
 	}
 	err := json.NewEncoder(w).Encode(soundcloudUrls)
 	if err != nil {
@@ -55,7 +54,7 @@ func addSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData models.AuthenticatedSoundcloudUrl
+	var soundcloudData AuthenticatedSoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -74,13 +73,13 @@ func deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData models.AuthenticatedSoundcloudUrl
+	var soundcloudData AuthenticatedSoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	if persistence.BearerTokenExists(soundcloudData.BearerToken, persistence.SqlLiteDatabaseFileName) {
-		persistence.DeleteSoundcloudUrl(soundcloudData.Url)
+		persistence.DeleteSoundcloudUrl(soundcloudData.Url, persistence.SqlLiteDatabaseFileName)
 		w.WriteHeader(http.StatusOK)
 		return
 	} else {
@@ -94,7 +93,7 @@ func deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 // Failed authentication returns a 401 Status Unauthorized
 func loginPost(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var userCredentials models.User
+	var userCredentials User
 	err := decoder.Decode(&userCredentials)
 	if err != nil {
 		println("Error decoding user credentials from client")
@@ -106,7 +105,7 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	userExists := persistence.UserExists(user, persistence.SqlLiteDatabaseFileName)
 	if userExists {
 		key := NewSHA1Hash()
-		var bearerToken models.BearerToken
+		var bearerToken BearerToken
 		bearerToken.BearerToken = key
 		persistence.UpdateUserBearerToken(userCredentials.Username, userCredentials.Password, key, persistence.SqlLiteDatabaseFileName)
 		w.WriteHeader(http.StatusCreated)

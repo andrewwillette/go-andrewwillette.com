@@ -3,7 +3,6 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
-	"github.com/andrewwillette/willette_api/models"
 	"log"
 )
 
@@ -67,7 +66,7 @@ func UpdateUserBearerToken(username, password, bearerToken, sqliteFile string) {
 	}
 }
 
-func getAllUsers(databaseFile string) ([]models.User, error) {
+func getAllUsers(databaseFile string) ([]User, error) {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -83,10 +82,10 @@ func getAllUsers(databaseFile string) ([]models.User, error) {
 	}
 	defer rows.Close()
 	var username, password, bearerToken sql.NullString
-	var users []models.User
+	var users []User
 	for rows.Next() {
 		err := rows.Scan(&username, &password, &bearerToken)
-		user := models.User{Username: username.String, Password: password.String}
+		user := User{Username: username.String, Password: password.String}
 		users = append(users, user)
 		if err != nil {
 			log.Fatalln(err.Error())
