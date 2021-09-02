@@ -10,11 +10,6 @@ type User struct {
 	BearerToken string `json:"bearerToken"`
 }
 
-func (u User) Read(p []byte) (n int, err error) {
-	return 
-	panic("implement me")
-}
-
 type BearerToken struct {
 	BearerToken string `json:"bearerToken"`
 }

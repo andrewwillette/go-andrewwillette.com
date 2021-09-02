@@ -1,9 +1,11 @@
 package persistence
 
 import (
+	"crypto/sha1"
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 )
 
 const userTable = "userCredentials"
@@ -11,10 +13,10 @@ const userTable = "userCredentials"
 func createUserTable(sqliteFile string) {
 	db, err := sql.Open("sqlite3", sqliteFile)
 	defer db.Close()
-	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s ("+
-		"\"username\" TEXT NOT NULL, "+
-		"\"password\" TEXT NOT NULL, "+
-		"\"bearerToken\" BLOB"+
+	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s (" +
+		"\"username\" TEXT NOT NULL, " +
+		"\"password\" TEXT NOT NULL, " +
+		"\"bearerToken\" BLOB" +
 		")", userTable)
 	statement, err := db.Prepare(createSoundcloudTableSQL) // Prepare SQL Statement
 	if err != nil {
@@ -114,36 +116,41 @@ func GetUser(username, password, sqliteFile string) (User, error) {
 	return user, nil
 }
 
-// UserExists Checks database if username, password exists
-func UserExists(user User, sqliteFile string) bool {
+// userExists Checks database if username, password exists
+func userExists(user User) (bool, error) {
 	db, err := sql.Open("sqlite3", sqliteFile)
 	if err != nil {
-		log.Fatalln(err.Error())
+		return false, err
 	}
 	defer db.Close()
 	userExistsStatement := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE username = "%s" AND password = "%s")`, userTable, user.Username, user.Password)
 	preparedStatement, err := db.Prepare(userExistsStatement)
 	if err != nil {
-		log.Fatalln(err.Error())
+		return false, err
 	}
 	rows, err := preparedStatement.Query()
 	if err != nil {
-		log.Fatalln(err.Error())
+		return false, err
 	}
 	defer rows.Close()
 	var success string
 	for rows.Next() {
 		err := rows.Scan(&success)
 		if err != nil {
-			log.Fatalln(err.Error())
+			return false, err
 		}
 		break
 	}
 	if success == "1" {
-		return true
+		return true, nil
 	} else {
-		return false
+		return false, nil
 	}
+}
+
+func Login(username, password string) (success bool, bearerToken string, err error) {
+
+	return true, "", nil
 }
 
 func BearerTokenExists(bearerToken, sqliteFile string) bool {
@@ -177,4 +184,82 @@ func BearerTokenExists(bearerToken, sqliteFile string) bool {
 		return false
 	}
 	return true
+}
+
+type UserService struct {}
+
+func (u *UserService) Login(username, password string) (success bool, bearerToken string, err error) {
+	//return persistence.
+	userExists, err := userExists(user, SqlLiteDatabaseFileName)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false, "", err
+	}
+	if userExists {
+		key := newSHA1Hash()
+		UpdateUserBearerToken(user.Username, user.Password, key, SqlLiteDatabaseFileName)
+		return true, key, nil
+	} else {
+		return false, "", nil
+	}
+}
+
+func (u *UserService) BearerTokenExists(bearerToken string) bool {
+	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer db.Close()
+	bearerTokenExists := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE bearerToken = "%s")`, userTable, bearerToken)
+	preparedStatement, err := db.Prepare(bearerTokenExists)
+	if err != nil {
+		println("Error parsing ")
+		log.Fatalln(err.Error())
+	}
+	rows, err := preparedStatement.Query()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer rows.Close()
+	var success string
+	for rows.Next() {
+		err := rows.Scan(&success)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		break
+	}
+	if success == "1" {
+		return true
+	} else {
+		return false
+	}
+	return true
+}
+
+func newSHA1Hash(n ...int) string {
+	noRandomCharacters := 32
+
+	if len(n) > 0 {
+		noRandomCharacters = n[0]
+	}
+
+	randString := randomString(noRandomCharacters)
+
+	hash := sha1.New()
+	hash.Write([]byte(randString))
+	bs := hash.Sum(nil)
+
+	return fmt.Sprintf("%x", bs)
+}
+
+var characterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+// randomString generates a random string of n length
+func randomString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = characterRunes[rand.Intn(len(characterRunes))]
+	}
+	return string(b)
 }

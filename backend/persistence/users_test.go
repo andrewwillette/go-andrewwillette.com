@@ -59,7 +59,11 @@ func TestUpdateUserBearerToken_Valid(t *testing.T) {
 	assert.Equal(t, user.Password, password)
 	assert.Equal(t, user.BearerToken, bearerToken)
 
-	userExists := UserExists(User{Username: username, Password: password}, testDatabaseFile)
+	userExists, err := userExists(User{Username: username, Password: password}, testDatabaseFile)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
 	assert.True(t, userExists)
 
 	bearerTokenExists := BearerTokenExists(bearerToken, testDatabaseFile)
