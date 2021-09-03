@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// Creates sqlite database with filename
+// Creates Sqlite database with filename
 func createDatabase(databaseFile string) error {
 	file, err := os.Create(databaseFile)
 	if err != nil {
@@ -44,13 +44,17 @@ func getAllTables(databaseFile string) ([]string, error) {
 }
 
 // InitDatabaseIdempotent - Creates database if it doesn't currently exist.
-func InitDatabaseIdempotent() {
-	if _, err := os.Stat(SqlLiteDatabaseFileName); os.IsNotExist(err) {
-		err = createDatabase(SqlLiteDatabaseFileName)
+func InitDatabaseIdempotent(sqlite string) {
+	if _, err := os.Stat(sqlite); os.IsNotExist(err) {
+		err = createDatabase(sqlite)
 		if err != nil {
 			panic("failed to create database")
 		}
-		createSoundcloudUrlTable(SqlLiteDatabaseFileName)
-		createUserTable(SqlLiteDatabaseFileName)
+
+		userService := &UserService{Sqlite: sqlite}
+		userService.createUserTable()
+
+		soundcloudUrlService := &SoundcloudUrlService{Sqlite: sqlite}
+		soundcloudUrlService.createSoundcloudUrlTable()
 	}
 }

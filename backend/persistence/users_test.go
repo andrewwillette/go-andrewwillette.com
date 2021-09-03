@@ -14,7 +14,8 @@ func deleteTestDatabase() {
 
 func TestCreateUserTable(t *testing.T) {
 	deleteTestDatabase()
-	createUserTable(testDatabaseFile)
+	userService := &UserService{Sqlite: testDatabaseFile}
+	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
 	if err != nil {
 		t.Fail()
@@ -24,33 +25,35 @@ func TestCreateUserTable(t *testing.T) {
 
 func TestCreateUser_Valid(t *testing.T) {
 	deleteTestDatabase()
-	createUserTable(testDatabaseFile)
+	userService := &UserService{Sqlite: testDatabaseFile}
+	userService.createUserTable()
 	username := "usernameOne"
 	password := "passwordOne"
-	err := AddUser(username, password, testDatabaseFile)
+	err := userService.addUser(username, password)
 	if err != nil {
 		println(err.Error())
 		t.Logf("failed to add user")
 		t.Fail()
 	}
-	users, err := getAllUsers(testDatabaseFile)
+	users, err := userService.getAllUsers()
 	assert.Equal(t, users[0].Username, username)
 	assert.Equal(t, users[0].Password, password)
 }
 
 func TestUpdateUserBearerToken_Valid(t *testing.T) {
 	deleteTestDatabase()
-	createUserTable(testDatabaseFile)
+	userService := &UserService{Sqlite: testDatabaseFile}
+	userService.createUserTable()
 	username := "usernameOne"
 	password := "passwordOne"
-	err := AddUser(username, password, testDatabaseFile)
+	err := userService.addUser(username, password)
 	if err != nil {
 		t.Logf("failed to add user")
 		t.Fail()
 	}
 	bearerToken := "bearerTokenOne"
-	UpdateUserBearerToken(username, password, bearerToken, testDatabaseFile)
-	user, err := GetUser(username, password, testDatabaseFile)
+	userService.updateUserBearerToken(username, password, bearerToken)
+	user, err := userService.getUser(username, password)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -59,13 +62,13 @@ func TestUpdateUserBearerToken_Valid(t *testing.T) {
 	assert.Equal(t, user.Password, password)
 	assert.Equal(t, user.BearerToken, bearerToken)
 
-	userExists, err := userExists(User{Username: username, Password: password}, testDatabaseFile)
+	userExists, err := userService.userExists(&User{Username: username, Password: password})
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
 	assert.True(t, userExists)
 
-	bearerTokenExists := BearerTokenExists(bearerToken, testDatabaseFile)
+	bearerTokenExists := userService.BearerTokenExists(bearerToken)
 	assert.True(t, bearerTokenExists)
 }

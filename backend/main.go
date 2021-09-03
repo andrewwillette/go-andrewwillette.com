@@ -1,17 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/andrewwillette/willette_api/persistence"
-	"net/http"
 )
 
-
-type persistenceSoundcloudUrlService struct {}
+const SqlLiteDatabaseFileName = "sqlite-database.db"
 
 func main() {
-	persistence.InitDatabaseIdempotent()
-	userService := &persistence.UserService{}
-	server := NewWilletteAPIServer(userService, persistenceSoundcloudUrlService)
-	runServer()
+	persistence.InitDatabaseIdempotent(SqlLiteDatabaseFileName)
+	userService := &persistence.UserService{Sqlite: SqlLiteDatabaseFileName}
+	soundcloudUrlService := &persistence.SoundcloudUrlService{Sqlite: SqlLiteDatabaseFileName}
+	server := NewWilletteAPIServer(userService, soundcloudUrlService)
+	server.RunServer()
 }

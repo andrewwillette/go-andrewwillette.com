@@ -6,25 +6,31 @@ import (
 	"log"
 )
 
-const SqlLiteDatabaseFileName = "sqlite-database.db"
 const soundcloudTable = "soundcloudUrl"
 
-func AddSoundcloudUrl(url, sqliteFile string) {
-	db, err := sql.Open("sqlite3", sqliteFile)
+type SoundcloudUrlService struct {
+	Sqlite string
+}
+
+func (u *SoundcloudUrlService) AddSoundcloudUrl(url string) error {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	defer db.Close()
 	insertUrlStatement := fmt.Sprintf("INSERT INTO %s(url) VALUES (?)", soundcloudTable)
 	addSoundcloudPreparedStatement, err := db.Prepare(insertUrlStatement) // Prepare statement. This is good to avoid SQL injections
 	if err != nil {
-		log.Fatalln(err.Error())
+		fmt.Println(err.Error())
+		return err
 	}
 	_, err = addSoundcloudPreparedStatement.Exec(url)
 	if err != nil {
-		log.Fatalln(err.Error())
+		fmt.Println(err.Error())
+		return err
 	}
+	return nil
 }
 
-func DeleteSoundcloudUrl(url, sqliteFile string) error {
-	db, err := sql.Open("sqlite3", sqliteFile)
+func (u *SoundcloudUrlService) DeleteSoundcloudUrl(url string) error {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	defer db.Close()
 	deleteSoundcloudStatement := fmt.Sprintf("DELETE FROM %s WHERE url = (?)", soundcloudTable)
 	deleteSoundcloudPreparedStatement, err := db.Prepare(deleteSoundcloudStatement) // Prepare statement. This is good to avoid SQL injections
@@ -39,8 +45,8 @@ func DeleteSoundcloudUrl(url, sqliteFile string) error {
 }
 
 // Creates database table for soundcloudUrls
-func createSoundcloudUrlTable(sqliteFile string) {
-	db, err := sql.Open("sqlite3", sqliteFile)
+func (u *SoundcloudUrlService) createSoundcloudUrlTable() {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s ("+
 		"\"id\" integer NOT NULL PRIMARY KEY AUTOINCREMENT,"+
 		"\"url\" TEXT"+
@@ -56,16 +62,18 @@ func createSoundcloudUrlTable(sqliteFile string) {
 }
 
 // GetAllSoundcloudUrls get all soundcloud urls in database
-func GetAllSoundcloudUrls(sqliteFile string) []string {
-	db, err := sql.Open("sqlite3", sqliteFile)
+func (u *SoundcloudUrlService) GetAllSoundcloudUrls() ([]string, error) {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	if err != nil {
-		log.Fatalln(err.Error())
+		fmt.Println(err.Error())
+		return nil, err
 	}
 	defer db.Close()
 	selectAllSoundcloudStatement := fmt.Sprintf("SELECT * FROM %s;", soundcloudTable)
 	row, err := db.Query(selectAllSoundcloudStatement)
 	if err != nil {
-		log.Fatalln(err.Error())
+		fmt.Println(err.Error())
+		return nil, err
 	}
 	defer row.Close()
 	var soundcloudUrls []string
@@ -74,9 +82,10 @@ func GetAllSoundcloudUrls(sqliteFile string) []string {
 		var urlTwo string
 		err := row.Scan(&url, &urlTwo)
 		if err != nil {
-			log.Fatalln(err.Error())
+			fmt.Println(err.Error())
+			return nil, err
 		}
 		soundcloudUrls = append(soundcloudUrls, urlTwo)
 	}
-	return soundcloudUrls
+	return soundcloudUrls, nil
 }

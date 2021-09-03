@@ -10,8 +10,12 @@ import (
 
 const userTable = "userCredentials"
 
-func createUserTable(sqliteFile string) {
-	db, err := sql.Open("sqlite3", sqliteFile)
+type UserService struct {
+	Sqlite string
+}
+
+func (u *UserService) createUserTable() {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	defer db.Close()
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s (" +
 		"\"username\" TEXT NOT NULL, " +
@@ -28,11 +32,11 @@ func createUserTable(sqliteFile string) {
 	}
 }
 
-func AddUser(username, password, sqliteFile string) error {
+func (u *UserService) addUser(username, password string) error {
 	//"INSERT INTO userCredentials(username, password) VALUES('$username', '$password');"
 	addUserSqlStatement := fmt.Sprintf("INSERT INTO %s(username, password) "+
 		"VALUES('%s', '%s');", userTable, username, password)
-	db, err := sql.Open("sqlite3", sqliteFile)
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	if err != nil {
 		return err
 	}
@@ -48,8 +52,8 @@ func AddUser(username, password, sqliteFile string) error {
 }
 
 // UpdateUserBearerToken Adds the provided bearerToken to the username/password
-func UpdateUserBearerToken(username, password, bearerToken, sqliteFile string) {
-	db, err := sql.Open("sqlite3", sqliteFile)
+func(u *UserService) updateUserBearerToken(username, password, bearerToken string) {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -68,8 +72,8 @@ func UpdateUserBearerToken(username, password, bearerToken, sqliteFile string) {
 	}
 }
 
-func getAllUsers(databaseFile string) ([]User, error) {
-	db, err := sql.Open("sqlite3", databaseFile)
+func(u *UserService) getAllUsers() ([]User, error) {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -96,8 +100,8 @@ func getAllUsers(databaseFile string) ([]User, error) {
 	return users, nil
 }
 
-func GetUser(username, password, sqliteFile string) (User, error) {
-	db, err := sql.Open("sqlite3", sqliteFile)
+func (u *UserService) getUser(username, password string) (User, error) {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	if err != nil {
 		return User{}, err
 	}
@@ -117,8 +121,8 @@ func GetUser(username, password, sqliteFile string) (User, error) {
 }
 
 // userExists Checks database if username, password exists
-func userExists(user User) (bool, error) {
-	db, err := sql.Open("sqlite3", sqliteFile)
+func (u *UserService) userExists(user *User) (bool, error) {
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	if err != nil {
 		return false, err
 	}
@@ -147,57 +151,51 @@ func userExists(user User) (bool, error) {
 		return false, nil
 	}
 }
-
-func Login(username, password string) (success bool, bearerToken string, err error) {
-
-	return true, "", nil
-}
-
-func BearerTokenExists(bearerToken, sqliteFile string) bool {
-	db, err := sql.Open("sqlite3", sqliteFile)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	defer db.Close()
-	bearerTokenExists := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE bearerToken = "%s")`, userTable, bearerToken)
-	preparedStatement, err := db.Prepare(bearerTokenExists)
-	if err != nil {
-		println("Error parsing ")
-		log.Fatalln(err.Error())
-	}
-	rows, err := preparedStatement.Query()
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	defer rows.Close()
-	var success string
-	for rows.Next() {
-		err := rows.Scan(&success)
-		if err != nil {
-			log.Fatalln(err.Error())
-		}
-		break
-	}
-	if success == "1" {
-		return true
-	} else {
-		return false
-	}
-	return true
-}
-
-type UserService struct {}
+//
+//func BearerTokenExists(bearerToken, sqliteFile string) bool {
+//	db, err := sql.Open("sqlite3", sqliteFile)
+//	if err != nil {
+//		log.Fatalln(err.Error())
+//	}
+//	defer db.Close()
+//	bearerTokenExists := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE bearerToken = "%s")`, userTable, bearerToken)
+//	preparedStatement, err := db.Prepare(bearerTokenExists)
+//	if err != nil {
+//		println("Error parsing ")
+//		log.Fatalln(err.Error())
+//	}
+//	rows, err := preparedStatement.Query()
+//	if err != nil {
+//		log.Fatalln(err.Error())
+//	}
+//	defer rows.Close()
+//	var success string
+//	for rows.Next() {
+//		err := rows.Scan(&success)
+//		if err != nil {
+//			log.Fatalln(err.Error())
+//		}
+//		break
+//	}
+//	if success == "1" {
+//		return true
+//	} else {
+//		return false
+//	}
+//	return true
+//}
 
 func (u *UserService) Login(username, password string) (success bool, bearerToken string, err error) {
 	//return persistence.
-	userExists, err := userExists(user, SqlLiteDatabaseFileName)
+	user := &User{Username: username, Password: password}
+	userExists, err := u.userExists(user)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false, "", err
 	}
 	if userExists {
 		key := newSHA1Hash()
-		UpdateUserBearerToken(user.Username, user.Password, key, SqlLiteDatabaseFileName)
+		u.updateUserBearerToken(user.Username, user.Password, key)
 		return true, key, nil
 	} else {
 		return false, "", nil
@@ -205,7 +203,7 @@ func (u *UserService) Login(username, password string) (success bool, bearerToke
 }
 
 func (u *UserService) BearerTokenExists(bearerToken string) bool {
-	db, err := sql.Open("sqlite3", SqlLiteDatabaseFileName)
+	db, err := sql.Open("sqlite3", u.Sqlite)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

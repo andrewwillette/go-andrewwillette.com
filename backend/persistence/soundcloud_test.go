@@ -7,25 +7,33 @@ import (
 
 func TestCreateSoundcloudUrlTable(t *testing.T){
 	deleteTestDatabase()
-	createSoundcloudUrlTable(testDatabaseFile)
-	createUserTable(testDatabaseFile)
+	soundcloudUrlService := &SoundcloudUrlService{Sqlite: testDatabaseFile}
+	soundcloudUrlService.createSoundcloudUrlTable()
+	userService := &UserService{Sqlite: testDatabaseFile}
+	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
 	if err != nil {
 		t.Fail()
 	}
 	assert.Equal(t, tables[0], "soundcloudUrl")
 	soundcloudUrl := "soundcloud.com/example"
-	AddSoundcloudUrl(soundcloudUrl, testDatabaseFile)
-	soundcloudUrls := GetAllSoundcloudUrls(testDatabaseFile)
+	soundcloudUrlService.AddSoundcloudUrl(soundcloudUrl)
+	soundcloudUrls, err := soundcloudUrlService.GetAllSoundcloudUrls()
+	if err != nil {
+		t.Fail()
+	}
 	assert.Contains(t, soundcloudUrls, soundcloudUrl)
 
 	soundcloudUrlTwo := "soundcloud.com/numbertwo"
-	AddSoundcloudUrl(soundcloudUrlTwo, testDatabaseFile)
-	soundcloudUrls = GetAllSoundcloudUrls(testDatabaseFile)
+	soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlTwo)
+	soundcloudUrls, err = soundcloudUrlService.GetAllSoundcloudUrls()
+	if err != nil {
+		t.Fail()
+	}
 	assert.Contains(t, soundcloudUrls, soundcloudUrlTwo)
 }
 
-func TestAddSoundcloudUrl(t *testing.T) {
-	deleteTestDatabase()
-	createSoundcloudUrlTable(testDatabaseFile)
-}
+//func TestAddSoundcloudUrl(t *testing.T) {
+//	deleteTestDatabase()
+//	createSoundcloudUrlTable(testDatabaseFile)
+//}
