@@ -11,5 +11,5 @@ func main() {
 	userService := &persistence.UserService{Sqlite: SqlLiteDatabaseFileName}
 	soundcloudUrlService := &persistence.SoundcloudUrlService{Sqlite: SqlLiteDatabaseFileName}
 	server := NewWilletteAPIServer(userService, soundcloudUrlService)
-	server.RunServer()
+	server.runServer()
 }

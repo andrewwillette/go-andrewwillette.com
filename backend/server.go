@@ -98,7 +98,7 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 	}
 }
 
-func (u *WilletteAPIServer) Login(w http.ResponseWriter, r *http.Request) {
+func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 	var userCredentials User
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
 		http.Error(w, fmt.Sprintf("cloud not decode user payload: %v", err), http.StatusBadRequest)
@@ -121,9 +121,9 @@ func (u *WilletteAPIServer) Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *WilletteAPIServer) RunServer() {
-	getHandler := http.HandlerFunc(u.getAllSoundcloudUrls)
-	http.Handle(getSoundcloudAllEndpoint, getHandler)
+func (u *WilletteAPIServer) runServer() {
+	getAllSoundcloudUrlsHandler := http.HandlerFunc(u.getAllSoundcloudUrls)
+	http.Handle(getSoundcloudAllEndpoint, getAllSoundcloudUrlsHandler)
 
 	putHandler := http.HandlerFunc(u.addSoundcloudUrl)
 	http.Handle(addSoundcloudEndpoint, putHandler)
@@ -131,7 +131,7 @@ func (u *WilletteAPIServer) RunServer() {
 	deleteHandler := http.HandlerFunc(u.deleteSoundcloudUrlPost)
 	http.Handle(deleteSoundcloudEndpoint, deleteHandler)
 
-	loginHandler := http.HandlerFunc(u.Login)
+	loginHandler := http.HandlerFunc(u.login)
 	http.Handle(loginEndpoint, loginHandler)
 
 	fmt.Println("running server")
