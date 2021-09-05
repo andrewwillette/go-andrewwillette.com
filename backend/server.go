@@ -59,7 +59,8 @@ func (u *WilletteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Requ
 	var soundcloudData AuthenticatedSoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
-		log.Fatalf(err.Error())
+		fmt.Println(err.Error())
+		return
 	}
 	if u.userService.BearerTokenExists(soundcloudData.BearerToken) {
 		err := u.soundcloudUrlService.AddSoundcloudUrl(soundcloudData.Url)
