@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -27,7 +28,7 @@ func (m *MockUserService) BearerTokenExists(bearerToken string) bool {
 type MockSoundcloudUrlService struct {
 	GetAllSoundcloudUrlsFunc func() ([]string, error)
 	AddSoundcloudUrlsFunc    func(s string) error
-	DeleteSoundcloudUrls     func(s string) error
+	DeleteSoundcloudUrlFunc  func(s string) error
 	SoundcloudUrls           []string
 }
 
@@ -40,7 +41,7 @@ func (m *MockSoundcloudUrlService) AddSoundcloudUrl(s string) error {
 }
 
 func (m MockSoundcloudUrlService) DeleteSoundcloudUrl(s string) error {
-	return m.DeleteSoundcloudUrls(s)
+	return m.DeleteSoundcloudUrlFunc(s)
 }
 
 func TestLogin(t *testing.T) {
@@ -91,6 +92,30 @@ func TestLogin(t *testing.T) {
 		assert.Equal(t, 200, response.Code)
 		assert.Contains(t, response.Body.String(), testBearerToken)
 	})
+
+	t.Run("GET returns 405", func(t *testing.T) {
+		var users []User
+		testBearerToken := "testBearerToken"
+		userService := &MockUserService{
+			UsersRegistered: users,
+			LoginFunc: func(username, password string) (success bool, bearerToken string, err error) {
+				return true, testBearerToken, nil
+			},
+			BearerTokenExistsFunc: func(bearerToken string) bool {
+				return true
+			},
+		}
+		var soundcloudUrls []string
+		soundcloudUrlService := &MockSoundcloudUrlService{
+			SoundcloudUrls: soundcloudUrls,
+		}
+		server := NewWilletteAPIServer(userService, soundcloudUrlService)
+		response := httptest.NewRecorder()
+		body := User{Username: "hello", Password: "passwordWorld"}
+		request := httptest.NewRequest(http.MethodGet, loginEndpoint, userToJSON(body))
+		server.login(response, request)
+		assert.Equal(t, 405, response.Code)
+	})
 }
 func TestAddSoundcloudUrl(t *testing.T) {
 	t.Run("valid bearer token", func(t *testing.T) {
@@ -106,16 +131,16 @@ func TestAddSoundcloudUrl(t *testing.T) {
 			},
 		}
 		soundcloudUrls := []string{"urlone.com", "urltwo.com"}
-		soundcloudUrlService := &MockSoundcloudUrlService {
+		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
 			GetAllSoundcloudUrlsFunc: func() ([]string, error) {
-				urls := []string{"urlone", "urlTwo"}
-				return urls, nil
+				return soundcloudUrls, nil
 			},
 			AddSoundcloudUrlsFunc: func(s string) error {
+				soundcloudUrls = append(soundcloudUrls, s)
 				return nil
 			},
-			DeleteSoundcloudUrls:  func(s string) error {
+			DeleteSoundcloudUrlFunc: func(s string) error {
 				return nil
 			},
 		}
@@ -128,7 +153,10 @@ func TestAddSoundcloudUrl(t *testing.T) {
 		responseTwo := httptest.NewRecorder()
 		requestTwo := httptest.NewRequest(http.MethodGet, getSoundcloudAllEndpoint, nil)
 		server.getAllSoundcloudUrls(responseTwo, requestTwo)
-		assert.Contains(t, responseTwo.Body.String(), "te")
+		fmt.Printf("new soundcloud url is %s\n", responseTwo.Body.String())
+		assert.Contains(t, responseTwo.Body.String(), newSoundcloudUrl)
+		assert.Contains(t, responseTwo.Body.String(), soundcloudUrls[0])
+		assert.Contains(t, responseTwo.Body.String(), soundcloudUrls[1])
 	})
 }
 

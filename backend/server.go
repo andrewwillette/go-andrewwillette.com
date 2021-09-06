@@ -100,6 +100,10 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 }
 
 func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	var userCredentials User
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
 		http.Error(w, fmt.Sprintf("cloud not decode user payload: %v", err), http.StatusBadRequest)

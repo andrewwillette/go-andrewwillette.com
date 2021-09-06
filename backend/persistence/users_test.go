@@ -2,29 +2,42 @@ package persistence
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"os"
 	"testing"
 )
 
 const testDatabaseFile = "testDatabase.db"
 
-func deleteTestDatabase() {
+type UsersTestSuite struct {
+	suite.Suite
+}
+
+func deleteDatabase() {
 	os.Remove(testDatabaseFile)
 }
 
-func TestCreateUserTable(t *testing.T) {
-	deleteTestDatabase()
+func (suite *UsersTestSuite) SetupTest() {
+	deleteDatabase()
+}
+
+func (suite *UsersTestSuite) TearDownSuite() {
+	deleteDatabase()
+}
+
+func (suite *UsersTestSuite)TestCreateUserTable() {
+	//deleteTestDatabase()
 	userService := &UserService{Sqlite: testDatabaseFile}
 	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
 	if err != nil {
-		t.Fail()
+		suite.T().Fail()
 	}
-	assert.Equal(t, tables[0], "userCredentials")
+	assert.Equal(suite.T(), tables[0], "userCredentials")
 }
 
-func TestCreateUser_Valid(t *testing.T) {
-	deleteTestDatabase()
+func (suite *UsersTestSuite)TestCreateUser_Valid() {
+	//deleteTestDatabase()
 	userService := &UserService{Sqlite: testDatabaseFile}
 	userService.createUserTable()
 	username := "usernameOne"
@@ -32,43 +45,47 @@ func TestCreateUser_Valid(t *testing.T) {
 	err := userService.addUser(username, password)
 	if err != nil {
 		println(err.Error())
-		t.Logf("failed to add user")
-		t.Fail()
+		suite.T().Logf("failed to add user")
+		suite.T().Fail()
 	}
 	users, err := userService.getAllUsers()
-	assert.Equal(t, users[0].Username, username)
-	assert.Equal(t, users[0].Password, password)
+	assert.Equal(suite.T(), users[0].Username, username)
+	assert.Equal(suite.T(), users[0].Password, password)
 }
 
-func TestUpdateUserBearerToken_Valid(t *testing.T) {
-	deleteTestDatabase()
+func (suite *UsersTestSuite)TestUpdateUserBearerToken_Valid() {
+	//deleteTestDatabase()
 	userService := &UserService{Sqlite: testDatabaseFile}
 	userService.createUserTable()
 	username := "usernameOne"
 	password := "passwordOne"
 	err := userService.addUser(username, password)
 	if err != nil {
-		t.Logf("failed to add user")
-		t.Fail()
+		suite.T().Logf("failed to add user")
+		suite.T().Fail()
 	}
 	bearerToken := "bearerTokenOne"
 	userService.updateUserBearerToken(username, password, bearerToken)
 	user, err := userService.getUser(username, password)
 	if err != nil {
-		t.Log(err)
-		t.Fail()
+		suite.T().Log(err)
+		suite.T().Fail()
 	}
-	assert.Equal(t, user.Username, username)
-	assert.Equal(t, user.Password, password)
-	assert.Equal(t, user.BearerToken, bearerToken)
+	assert.Equal(suite.T(), user.Username, username)
+	assert.Equal(suite.T(), user.Password, password)
+	assert.Equal(suite.T(), user.BearerToken, bearerToken)
 
 	userExists, err := userService.userExists(&User{Username: username, Password: password})
 	if err != nil {
-		t.Log(err)
-		t.Fail()
+		suite.T().Log(err)
+		suite.T().Fail()
 	}
-	assert.True(t, userExists)
+	assert.True(suite.T(), userExists)
 
 	bearerTokenExists := userService.BearerTokenExists(bearerToken)
-	assert.True(t, bearerTokenExists)
+	assert.True(suite.T(), bearerTokenExists)
+}
+
+func TestUsersSuite(t *testing.T) {
+	suite.Run(t, new(UsersTestSuite))
 }

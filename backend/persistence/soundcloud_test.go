@@ -2,35 +2,52 @@ package persistence
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func TestCreateSoundcloudUrlTable(t *testing.T){
-	deleteTestDatabase()
+type SoundcloudTestSuite struct {
+	suite.Suite
+}
+
+func (suite *SoundcloudTestSuite) SetupTest() {
+	deleteDatabase()
+}
+
+func (suite *SoundcloudTestSuite) TearDownSuite() {
+	deleteDatabase()
+}
+
+func (suite *SoundcloudTestSuite)TestCreateSoundcloudUrlTable() {
 	soundcloudUrlService := &SoundcloudUrlService{Sqlite: testDatabaseFile}
 	soundcloudUrlService.createSoundcloudUrlTable()
 	userService := &UserService{Sqlite: testDatabaseFile}
 	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
 	if err != nil {
-		t.Fail()
+		suite.T().Fail()
 	}
-	assert.Equal(t, tables[0], "soundcloudUrl")
+	assert.Equal(suite.T(), tables[0], "soundcloudUrl")
 	soundcloudUrl := "soundcloud.com/example"
 	soundcloudUrlService.AddSoundcloudUrl(soundcloudUrl)
 	soundcloudUrls, err := soundcloudUrlService.GetAllSoundcloudUrls()
 	if err != nil {
-		t.Fail()
+		suite.T().Fail()
 	}
-	assert.Contains(t, soundcloudUrls, soundcloudUrl)
+	assert.Contains(suite.T(), soundcloudUrls, soundcloudUrl)
 
 	soundcloudUrlTwo := "soundcloud.com/numbertwo"
 	soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlTwo)
 	soundcloudUrls, err = soundcloudUrlService.GetAllSoundcloudUrls()
 	if err != nil {
-		t.Fail()
+		suite.T().Fail()
 	}
-	assert.Contains(t, soundcloudUrls, soundcloudUrlTwo)
+	assert.Contains(suite.T(), soundcloudUrls, soundcloudUrlTwo)
+}
+
+
+func TestSoundcloudSuite(t *testing.T) {
+	suite.Run(t, new(SoundcloudTestSuite))
 }
 
 //func TestAddSoundcloudUrl(t *testing.T) {
