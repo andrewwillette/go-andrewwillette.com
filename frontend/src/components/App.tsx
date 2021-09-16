@@ -14,10 +14,10 @@ function App() {
             <div className="container">
                 <div className="App">
                     <BrowserRouter>
-                        <h1>
-                            <Link to="/">Andrew Willette</Link>
-                        </h1>
                         <ul className="navbar">
+                            <li>
+                                <Link to="/">Home</Link>
+                            </li>
                             <li>
                                 <Link to="/music">Music</Link>
                             </li>
