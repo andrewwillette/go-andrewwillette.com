@@ -45,12 +45,6 @@ func (suite *SoundcloudTestSuite)TestCreateSoundcloudUrlTable() {
 	assert.Contains(suite.T(), soundcloudUrls, soundcloudUrlTwo)
 }
 
-
 func TestSoundcloudSuite(t *testing.T) {
 	suite.Run(t, new(SoundcloudTestSuite))
 }
-
-//func TestAddSoundcloudUrl(t *testing.T) {
-//	deleteTestDatabase()
-//	createSoundcloudUrlTable(testDatabaseFile)
-//}

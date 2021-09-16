@@ -3,20 +3,12 @@ const path = require('path')
 
 const app = express(); // create express app
 const port = 80;
+
 app.use(express.static("build"));
 
 app.use('*', (req, res) => {
     res.sendFile(path.join(__dirname, '/build/index.html'));
 });
 
-//const server = app.listen(8080, () => {
-//    console.log('Running at 8080');
-//});
-
-// start express server on port 5000
-//
 var server = require('http').createServer(app);
-server.listen(8080, "0.0.0.0");
-//app.listen(port, () => {
-//    console.log(`server started on port: ${port}`);
-//});
+server.listen(port, "0.0.0.0");

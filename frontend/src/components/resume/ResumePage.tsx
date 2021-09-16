@@ -11,7 +11,7 @@ export class ResumePage extends Component<any, any> {
                 </h3>
                 <ul id="resume-employment">
                     <li>
-                        Cerner 2017-2021
+                        Cerner 2017 - 2021
                         <ul>
                             <li>
                                 Software Engineer II - Cloud Identity and Access Management
@@ -19,7 +19,7 @@ export class ResumePage extends Component<any, any> {
                         </ul>
                     </li>
                     <li>
-                        GOM Software International 2018-2020
+                        GOM Software International 2018 - 2020
                         <ul>
                             <li>
                                 Software Engineer - Agricultural Feeding
@@ -27,7 +27,7 @@ export class ResumePage extends Component<any, any> {
                         </ul>
                     </li>
                     <li>
-                        Fiddling Technologies 2017-2021
+                        Fiddling Technologies 2017 - 2021
                         <ul>
                             <li>
                                 President
@@ -36,34 +36,49 @@ export class ResumePage extends Component<any, any> {
                     </li>
                 </ul>
                 <h3 className="resume-header">
-                    Experience
+                    Software Development Experience
                 </h3>
                 <ul>
                     <li>
                         Java
                         <ul>
                             <li>
-                                Built and extended java web services such as Cerner's enterprise user-roster, authorization-server, and single-sign-on services.
+                                Added support in Cerner's User Roster backend and frontend services for inactive users, rather than deleting resources.
                             </li>
                             <li>
-                                Common tools I use include Apache Maven, Java Spring, JAXRS, HK2, Hibernate, OracleDB, JSP, JUnit, Spock (groovy testing framework).
+                                Added support in Cerner's Authorization Server for JSON Web Key Set authentication. Includes the work to allow registering JSON Web Key Sets to pair with the signed JWT's presented to the Authorization Server.
+                            </li>
+                            <li>
+                                Updated Cerner's System Accounts application to allow for lower-privileged third-party System Accounts automatic registration. Part of 21st Century Cures Act for allowing greater inoperability of Cerner's APIs.
+                            </li>
+                            <li>
+                                Implemented New Relic and Google Analytics Metrics client library in many different Tomcat-hosted cloud solutions. Both Counters and Gauges configured for UI interaction and website performance.
+                            </li>
+                            <li>
+                                Primary Java technologies include Maven, Spring, JAXRS, HK2, Hibernate, Tomcat, OracleDB, JSP, JUnit, and Spock.
                             </li>
                         </ul>
                     </li>
                     <li>
-                        Javascript
+                        Javascript/Typescript
                         <ul>
                             <li>
-                                Built React frontends for sites supporting identity-access services, such as logging into identity providers and managing user sessions.
+                                Built React frontends from wireframes for sites supporting identity-access services, such as logging into identity providers and managing user sessions.
                             </li>
                             <li>
-                                Implemented front-end Typescript library for managing service calls in SSO login process, consumed by both Cloud IAM team and all Cerner web-based applications.
+                                Wrote javascript consuming Cloud IAM Graph-QL endpoints for mapping clients to their identity-providers.
+                            </li>
+                            <li>
+                                Implemented npm Typescript client library for third-party apps to authenticate with Cerner Single-Sign-On sessions.
+                            </li>
+                            <li>
+                                Extensive css experience styling login pages, user tables, and account customization UIs.
                             </li>
                             <li>
                                 Extensive testing experience in the npm environment (mocha, jest, chai, jasmine, enzyme).
                             </li>
                             <li>
-                                Experienced with C# Razor front ends consuming knockout.js for client updating.
+                                Personal website built on Typescript-based React front end.
                             </li>
                         </ul>
                     </li>
@@ -71,17 +86,19 @@ export class ResumePage extends Component<any, any> {
                         AWS
                         <ul>
                             <li>
-                                Experience writing and managing Terraform configurations for different cloud environments. This includes EC2 instances, load balancers, target groups, and security groups.
+                                Experience writing and managing Terraform scripts for EC2 instances, Elastic Load Balancers, Target Groups, and Security Groups in a multi-cloud-region deployment pattern.
                             </li>
                             <li>
-                                Experience writing and managing Packer configurations for custom, per-service AMIs.
+                                Experience writing and managing Packer configurations for per-service AMIs.
                             </li>
                             <li>
-
-                                Deployed Jenkins master and slaves into AWS with custom jobs managed via Jenkins groovy APIs.
+                                Integrated AWS environment with Jenkins master / slaves deployments. Using native jenkins groovy API's and AMI's managed via Packer, all jenkins builds operated in AWS infrastructure.
                             </li>
                             <li>
-                                Strong familiarity with AWS billing practices.
+                                Allowed passivity in cloud migrations via customized Elastic Load Balancers rules to route legacy traffic to newly supported resource locations.
+                            </li>
+                            <li>
+                                Strong familiarity with AWS billing practices / patterns.
                             </li>
                         </ul>
                     </li>
@@ -89,13 +106,13 @@ export class ResumePage extends Component<any, any> {
                         C#
                         <ul>
                             <li>
-                                Built full .NET Core web application for agricultural feeding customization.
+                                Implemented eight different frontend pages from wireframe specs, complete with full table functionality managed via knockout.js.
                             </li>
                             <li>
-                                Implemented Braintree online payment system collecting credit and debit cards for scheduled payment processing.
+                                Implemented Braintree online payment system collecting credit and debit cards for a scheduled payment processing plan.
                             </li>
                             <li>
-                                SQL Server Schema design and implementation for feeding application management (Rations, Ration Reports, Ration Ingredients, Consultants, Producers).
+                                Managed Microsoft SQL Server schema modifications for role-based authentication.
                             </li>
                         </ul>
                     </li>
@@ -106,10 +123,13 @@ export class ResumePage extends Component<any, any> {
                                 Linux (Rhel, Ubuntu)
                             </li>
                             <li>
-                                Bash, Python
+                                Bash, Golang, Python
                             </li>
                             <li>
                                 IntelliJ Idea, Visual Studio, Vim
+                            </li>
+                            <li>
+                                Docker
                             </li>
                             <li>
                                 New Relic
@@ -118,7 +138,7 @@ export class ResumePage extends Component<any, any> {
                                 GraphQL
                             </li>
                             <li>
-                                Wireshark
+                                Chef CI/CD Infrastructure
                             </li>
                         </ul>
                     </li>
@@ -129,10 +149,10 @@ export class ResumePage extends Component<any, any> {
                 </h3>
                 <ul>
                     <li>
-                        Bachelor of Arts Degree - Computer Science
+                        Bachelor's Degree - Computer Science
                     </li>
                     <li>
-                        Bachelor of Arts Degree - Violin Performance
+                        Bachelor's Degree - Violin Performance
                     </li>
                 </ul>
             </div>

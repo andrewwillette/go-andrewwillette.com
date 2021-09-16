@@ -25,7 +25,7 @@ type SoundcloudUrlService interface {
 }
 
 type WilletteAPIServer struct {
-	userService UserService
+	userService          UserService
 	soundcloudUrlService SoundcloudUrlService
 }
 
