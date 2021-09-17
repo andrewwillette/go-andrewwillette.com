@@ -1,6 +1,6 @@
 .react-player {
     display:inline-block;
-    width: 50%;
+    width: 70vw !important;
     height:100px !important;
     margin: .5rem;
 }
