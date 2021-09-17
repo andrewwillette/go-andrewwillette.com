@@ -6,7 +6,7 @@ export class AudioPlayer extends Component<any, any> {
         return (
             <div className="audioPlayer">
                 <ReactPlayer
-                    url = {this.props.soundcloudUrl}
+                    url = {this.props.soundcloudUrl + "?text-decoration=none"}
                     className='react-player'
                     config={{
                         soundcloud: {
