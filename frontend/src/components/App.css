@@ -21,7 +21,7 @@ code {
 
 .navbar li {
     display: inline;
-    margin: 3rem;
+    padding: .7rem;
 }
 
 a {
