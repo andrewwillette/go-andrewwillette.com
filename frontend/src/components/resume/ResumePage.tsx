@@ -49,7 +49,7 @@ export class ResumePage extends Component<any, any> {
                                 Added support in Cerner's Authorization Server for JSON Web Key Set authentication. Includes the work to allow registering JSON Web Key Sets to pair with the signed JWT's presented to the Authorization Server.
                             </li>
                             <li>
-                                Updated Cerner's System Accounts application to allow for lower-privileged third-party System Accounts automatic registration. Part of 21st Century Cures Act for allowing greater inoperability of Cerner's APIs.
+                                Updated Cerner's System Accounts application to allow for lower-privileged third-party System Accounts automatic registration. Part of 21st Century Cures Act for allowing greater interoperability of Cerner's APIs.
                             </li>
                             <li>
                                 Implemented New Relic and Google Analytics Metrics client library in many different Tomcat-hosted cloud solutions. Both Counters and Gauges configured for UI interaction and website performance.
