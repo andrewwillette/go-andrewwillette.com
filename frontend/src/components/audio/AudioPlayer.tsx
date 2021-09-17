@@ -12,7 +12,8 @@ export class AudioPlayer extends Component<any, any> {
                         soundcloud: {
                             // should work according to docs https://github.com/CookPete/react-player but it's borked. I shove the data in url as query param lmao ??
                             options : {
-                                show_user: false
+                                show_user: false,
+                                text-decoration: none
                             }
                         }
                     }}
