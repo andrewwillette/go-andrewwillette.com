@@ -60,7 +60,7 @@ export class ResumePage extends Component<any, any> {
                         </ul>
                     </li>
                     <li>
-                        Javascript/Typescript
+                        Javascript / Typescript
                         <ul>
                             <li>
                                 Built React frontends from wireframes for sites supporting identity-access services, such as logging into identity providers and managing user sessions.
@@ -152,7 +152,7 @@ export class ResumePage extends Component<any, any> {
                         Bachelor's Degree - Computer Science
                     </li>
                     <li>
-                        Bachelor's Degree - Violin Performance
+                        Bachelor's Degree - Violin
                     </li>
                 </ul>
             </div>

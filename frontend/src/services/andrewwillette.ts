@@ -69,6 +69,8 @@ interface BearerToken {
  */
 async function login(username: string, password: string) {
     const data : Promise<HttpResponse<BearerToken>> = http<BearerToken>(`${serviceLocation}${loginEndpoint}`, {username, password});
+    console.log("data from login call is ");
+    console.log(data);
     return await data;
 }
 
@@ -86,3 +88,4 @@ async function addSoundcloudUrl(url: string) {
     const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${addSoundcloudEndpoint}`, {url, bearerToken: getBearerToken()});
     return await data;
 }
+

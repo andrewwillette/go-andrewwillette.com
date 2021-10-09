@@ -21,7 +21,7 @@ function App() {
                                 <Link to="/music">Music</Link>
                             </li>
                             <li>
-                                <Link to="/resume">Resume</Link>
+                                <Link to="/resume">CV</Link>
                             </li>
                         </ul>
                         <Switch>
