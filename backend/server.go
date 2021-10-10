@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 const getSoundcloudAllEndpoint = "/get-soundcloud-urls"
@@ -83,7 +84,7 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 	var soundcloudData AuthenticatedSoundcloudUrl
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal().Err(err)
 	}
 	if u.userService.BearerTokenExists(soundcloudData.BearerToken) {
 		err = u.soundcloudUrlService.DeleteSoundcloudUrl(soundcloudData.Url)
@@ -100,7 +101,7 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 }
 
 func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("calling login")
+	log.Debug().Msg("calling login")
 	if r.Method != "POST" {
 		fmt.Println("method not post")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -117,12 +118,14 @@ func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 
 	user := User{Username: userCredentials.Username, Password: userCredentials.Password}
 	loginSuccessful, bearerToken, err := u.userService.Login(user.Username, user.Password)
+	log.Debug().Msg(fmt.Sprintf("Login Successful: %t Bearer token: %s", loginSuccessful, bearerToken))
 	if loginSuccessful {
 		if err = json.NewEncoder(w).Encode(bearerToken); err != nil {
+			log.Debug().Msg(fmt.Sprintf("returning response %d", http.StatusUnauthorized))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		fmt.Println("made to end of logout shoiuld be good")
+		log.Debug().Msg("Login successful")
 		return
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -143,11 +146,9 @@ func (u *WilletteAPIServer) runServer() {
 	loginHandler := http.HandlerFunc(u.login)
 	http.Handle(loginEndpoint, loginHandler)
 
-	fmt.Println("running server")
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
-		println(err.Error())
-		log.Fatal(fmt.Sprintf("Failed to listen and serve to port %d", port))
+		log.Fatal().Msg(fmt.Sprintf("Failed to listen and serve to port %d", port))
 		return
 	}
 }

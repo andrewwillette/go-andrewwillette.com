@@ -23,7 +23,7 @@ export class AdminPage extends Component<any, any> {
 
     deleteSoundcloudUrl(soundcloudUrl: string) {
         deleteSoundcloudUrl(soundcloudUrl).then(result => {
-            if(result.status === 201) {
+            if(result.status === 201 || result.status === 200) {
                 this.setState({unauthorizedReason: null});
             } else {
                 this.setState({unauthorizedReason: "Not logged in, cannot delete URLS"});
@@ -41,16 +41,23 @@ export class AdminPage extends Component<any, any> {
     }
 
     async sendLogin() {
-        let username = (document.getElementById("username") as HTMLInputElement).value;
-        let password = (document.getElementById("password") as HTMLInputElement).value;
+        let username = (document.getElementById("username") as HTMLInputElement).value
+        let password = (document.getElementById("password") as HTMLInputElement).value
 
-        let responsePromise = login(username, password);
+        let responsePromise = login(username, password)
         responsePromise.then(response => {
-            if(response.status === 201) {
-                const token = response.parsedBody?.bearerToken;
-                if(token){
-                    setBearerToken(token)
-                    this.setState({unauthorizedReason: null});
+            console.log("response from login is")
+            console.log(response)
+            if(response.status === 200) {
+                const token = response.parsedBody
+                console.log(`token is ${token}`)
+                console.log(typeof response.parsedBody?.bearerToken)
+                console.log(typeof token)
+                console.log(response.parsedBody)
+
+                if(token) {
+                    setBearerToken(String(token))
+                    this.setState({unauthorizedReason: null})
                 }
             } else {
                 this.setState({unauthorizedReason: "Login Failed"});
