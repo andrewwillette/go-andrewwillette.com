@@ -4,6 +4,7 @@ import (
 	"github.com/andrewwillette/willette_api/persistence"
 )
 
+// local sqlite database filename
 const SqlLiteDatabaseFileName = "sqlite-database.db"
 
 func main() {
