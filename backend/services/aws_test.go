@@ -6,6 +6,6 @@ import (
 )
 
 func TestGetS3HostedPDFs(t *testing.T) {
-    fmt.Println("running pdf test")
-    GetS3HostedPDFs()
+	fmt.Println("running pdf test")
+	GetS3HostedPDFs()
 }

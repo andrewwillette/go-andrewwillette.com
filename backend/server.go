@@ -15,7 +15,7 @@ const loginEndpoint = "/login"
 const port = 9099
 
 type UserService interface {
-	Login(username, password string) (success bool, bearerToken string, err error)
+	Login(username, password string) (success bool, bearerToken string)
 	BearerTokenExists(bearerToken string) bool
 }
 
@@ -35,6 +35,7 @@ func NewWilletteAPIServer(userService UserService, soundcloudUrlService Soundclo
 }
 
 func (u *WilletteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, r *http.Request) {
+	log.Debug().Msg("getAllSoundcloudUrls called.")
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	urls, err := u.soundcloudUrlService.GetAllSoundcloudUrls()
@@ -117,10 +118,10 @@ func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	user := User{Username: userCredentials.Username, Password: userCredentials.Password}
-	loginSuccessful, bearerToken, err := u.userService.Login(user.Username, user.Password)
+	loginSuccessful, bearerToken := u.userService.Login(user.Username, user.Password)
 	log.Debug().Msg(fmt.Sprintf("Login Successful: %t Bearer token: %s", loginSuccessful, bearerToken))
 	if loginSuccessful {
-		if err = json.NewEncoder(w).Encode(bearerToken); err != nil {
+		if err := json.NewEncoder(w).Encode(bearerToken); err != nil {
 			log.Debug().Msg(fmt.Sprintf("returning response %d", http.StatusUnauthorized))
 			w.WriteHeader(http.StatusUnauthorized)
 			return

@@ -18,10 +18,10 @@ func (suite *SoundcloudTestSuite) TearDownSuite() {
 	deleteDatabase()
 }
 
-func (suite *SoundcloudTestSuite)TestCreateSoundcloudUrlTable() {
+func (suite *SoundcloudTestSuite) TestCreateSoundcloudUrlTable() {
 	soundcloudUrlService := &SoundcloudUrlService{Sqlite: testDatabaseFile}
 	soundcloudUrlService.createSoundcloudUrlTable()
-	userService := &UserService{Sqlite: testDatabaseFile}
+	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
 	if err != nil {

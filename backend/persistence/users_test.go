@@ -25,9 +25,9 @@ func (suite *UsersTestSuite) TearDownSuite() {
 	deleteDatabase()
 }
 
-func (suite *UsersTestSuite)TestCreateUserTable() {
+func (suite *UsersTestSuite) TestCreateUserTable() {
 	//deleteTestDatabase()
-	userService := &UserService{Sqlite: testDatabaseFile}
+	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
 	if err != nil {
@@ -36,9 +36,9 @@ func (suite *UsersTestSuite)TestCreateUserTable() {
 	assert.Equal(suite.T(), tables[0], "userCredentials")
 }
 
-func (suite *UsersTestSuite)TestCreateUser_Valid() {
+func (suite *UsersTestSuite) TestCreateUser_Valid() {
 	//deleteTestDatabase()
-	userService := &UserService{Sqlite: testDatabaseFile}
+	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
 	username := "usernameOne"
 	password := "passwordOne"
@@ -53,9 +53,9 @@ func (suite *UsersTestSuite)TestCreateUser_Valid() {
 	assert.Equal(suite.T(), users[0].Password, password)
 }
 
-func (suite *UsersTestSuite)TestUpdateUserBearerToken_Valid() {
+func (suite *UsersTestSuite) TestUpdateUserBearerToken_Valid() {
 	//deleteTestDatabase()
-	userService := &UserService{Sqlite: testDatabaseFile}
+	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
 	username := "usernameOne"
 	password := "passwordOne"

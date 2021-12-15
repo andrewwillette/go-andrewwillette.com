@@ -51,7 +51,7 @@ func InitDatabaseIdempotent(sqlite string) {
 			panic("failed to create database")
 		}
 
-		userService := &UserService{Sqlite: sqlite}
+		userService := &UserService{SqliteDbFile: sqlite}
 		userService.createUserTable()
 
 		soundcloudUrlService := &SoundcloudUrlService{Sqlite: sqlite}
