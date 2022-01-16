@@ -1,4 +1,4 @@
-package main
+package server
 
 type SoundcloudUrl struct {
 	Url string `json:"url"`

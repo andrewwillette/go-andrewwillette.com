@@ -15,6 +15,12 @@ type UserService struct {
 	SqliteDbFile string
 }
 
+type User struct {
+	Username    string
+	Password    string
+	BearerToken string
+}
+
 func (u *UserService) createUserTable() {
 	db, err := sql.Open("sqlite3", u.SqliteDbFile)
 	if err != nil {

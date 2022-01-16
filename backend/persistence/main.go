@@ -3,6 +3,7 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"github.com/andrewwillette/willette_api/logging"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 )
@@ -13,7 +14,10 @@ func createDatabase(databaseFile string) error {
 	if err != nil {
 		return err
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		return err
+	}
 	sqliteDatabase, err := sql.Open("sqlite3", fmt.Sprintf("./%s", databaseFile))
 	if err != nil {
 		return err
@@ -44,17 +48,18 @@ func getAllTables(databaseFile string) ([]string, error) {
 }
 
 // InitDatabaseIdempotent - Creates database if it doesn't currently exist.
-func InitDatabaseIdempotent(sqlite string) {
-	if _, err := os.Stat(sqlite); os.IsNotExist(err) {
-		err = createDatabase(sqlite)
+// Database creation includes creating the user and soundcloud table.
+func InitDatabaseIdempotent(sqliteFile string) {
+	if _, err := os.Stat(sqliteFile); os.IsNotExist(err) {
+		err = createDatabase(sqliteFile)
 		if err != nil {
-			panic("failed to create database")
+			logging.GlobalLogger.Fatal().Msg("failed to create database")
 		}
 
-		userService := &UserService{SqliteDbFile: sqlite}
+		userService := &UserService{SqliteDbFile: sqliteFile}
 		userService.createUserTable()
 
-		soundcloudUrlService := &SoundcloudUrlService{Sqlite: sqlite}
+		soundcloudUrlService := &SoundcloudUrlService{Sqlite: sqliteFile}
 		soundcloudUrlService.createSoundcloudUrlTable()
 	}
 }

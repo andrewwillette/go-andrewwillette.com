@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -134,7 +134,7 @@ func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *WilletteAPIServer) runServer() {
+func (u *WilletteAPIServer) RunServer() {
 	getAllSoundcloudUrlsHandler := http.HandlerFunc(u.getAllSoundcloudUrls)
 	http.Handle(getSoundcloudAllEndpoint, getAllSoundcloudUrlsHandler)
 

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/andrewwillette/willette_api/logging"
 	"github.com/andrewwillette/willette_api/persistence"
+	"github.com/andrewwillette/willette_api/server"
 )
 
 const SqlLiteDatabaseFileName = "sqlite-database.db"
@@ -12,6 +13,6 @@ func main() {
 	persistence.InitDatabaseIdempotent(SqlLiteDatabaseFileName)
 	userService := &persistence.UserService{SqliteDbFile: SqlLiteDatabaseFileName}
 	soundcloudUrlService := &persistence.SoundcloudUrlService{Sqlite: SqlLiteDatabaseFileName}
-	server := NewWilletteAPIServer(userService, soundcloudUrlService)
-	server.runServer()
+	websiteServer := server.NewWilletteAPIServer(userService, soundcloudUrlService)
+	websiteServer.RunServer()
 }

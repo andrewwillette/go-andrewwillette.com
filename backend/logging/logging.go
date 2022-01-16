@@ -10,6 +10,8 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+const loggingLevel = zerolog.DebugLevel
+
 var logConfig = LogConfig{
 	ConsoleLoggingEnabled: true,
 	EncodeLogsAsJson:      true,
@@ -19,6 +21,7 @@ var logConfig = LogConfig{
 	MaxSizeMB:             200,
 	MaxBackups:            2,
 	MaxAge:                31,
+	LogLevel:              zerolog.DebugLevel,
 }
 var GlobalLogger = Configure(logConfig)
 
@@ -31,6 +34,7 @@ type LogConfig struct {
 	MaxSizeMB             int
 	MaxBackups            int
 	MaxAge                int
+	LogLevel              zerolog.Level
 }
 
 type Logger struct {
@@ -47,7 +51,7 @@ func Configure(config LogConfig) *Logger {
 		writers = append(writers, newRollingFile(config))
 	}
 	mw := io.MultiWriter(writers...)
-	// zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(config.LogLevel)
 	logger := zerolog.New(mw).With().Timestamp().Logger()
 	logger.Info().
 		Bool("fileLogging", config.FileLoggingEnabled).
