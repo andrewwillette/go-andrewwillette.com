@@ -10,13 +10,11 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-const loggingLevel = zerolog.DebugLevel
-
 var logConfig = LogConfig{
 	ConsoleLoggingEnabled: true,
 	EncodeLogsAsJson:      true,
 	FileLoggingEnabled:    true,
-	Directory:             "./logging",
+	Directory:             "/Users/aw052728/git/go-andrewwillette.com/backend/logging",
 	Filename:              "server.log",
 	MaxSizeMB:             200,
 	MaxBackups:            2,
@@ -24,6 +22,18 @@ var logConfig = LogConfig{
 	LogLevel:              zerolog.DebugLevel,
 }
 var GlobalLogger = Configure(logConfig)
+var testlogConfig = LogConfig{
+	ConsoleLoggingEnabled: true,
+	EncodeLogsAsJson:      true,
+	FileLoggingEnabled:    true,
+	Directory:             "/Users/aw052728/git/go-andrewwillette.com/backend/logging",
+	Filename:              "test.log",
+	MaxSizeMB:             200,
+	MaxBackups:            2,
+	MaxAge:                31,
+	LogLevel:              zerolog.DebugLevel,
+}
+var TestLogger = Configure(testlogConfig)
 
 type LogConfig struct {
 	ConsoleLoggingEnabled bool

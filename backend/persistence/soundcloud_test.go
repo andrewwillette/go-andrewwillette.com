@@ -10,6 +10,10 @@ type SoundcloudTestSuite struct {
 	suite.Suite
 }
 
+func TestSoundcloudSuite(t *testing.T) {
+	suite.Run(t, new(SoundcloudTestSuite))
+}
+
 func (suite *SoundcloudTestSuite) SetupTest() {
 	deleteDatabase()
 }
@@ -43,8 +47,4 @@ func (suite *SoundcloudTestSuite) TestCreateSoundcloudUrlTable() {
 		suite.T().Fail()
 	}
 	assert.Contains(suite.T(), soundcloudUrls, soundcloudUrlTwo)
-}
-
-func TestSoundcloudSuite(t *testing.T) {
-	suite.Run(t, new(SoundcloudTestSuite))
 }

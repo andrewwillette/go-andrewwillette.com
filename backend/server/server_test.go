@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -14,11 +14,11 @@ import (
 
 type MockUserService struct {
 	UsersRegistered       []User
-	LoginFunc             func(username string, password string) (success bool, bearerToken string, err error)
+	LoginFunc             func(username string, password string) (success bool, bearerToken string)
 	BearerTokenExistsFunc func(bearerToken string) bool
 }
 
-func (m *MockUserService) Login(username, password string) (success bool, bearerToken string, err error) {
+func (m *MockUserService) Login(username, password string) (success bool, bearerToken string) {
 	return m.LoginFunc(username, password)
 }
 
@@ -52,8 +52,8 @@ func TestLogin(t *testing.T) {
 		var users []User
 		userService := &MockUserService{
 			UsersRegistered: users,
-			LoginFunc: func(username, password string) (success bool, bearerToken string, err error) {
-				return false, "", nil
+			LoginFunc: func(username, password string) (success bool, bearerToken string) {
+				return false, ""
 			},
 			BearerTokenExistsFunc: func(bearerToken string) bool {
 				return true
@@ -74,8 +74,8 @@ func TestLogin(t *testing.T) {
 		testBearerToken := "testBearerToken"
 		userService := &MockUserService{
 			UsersRegistered: users,
-			LoginFunc: func(username, password string) (success bool, bearerToken string, err error) {
-				return true, testBearerToken, nil
+			LoginFunc: func(username, password string) (success bool, bearerToken string) {
+				return true, testBearerToken
 			},
 			BearerTokenExistsFunc: func(bearerToken string) bool {
 				return true
@@ -99,8 +99,8 @@ func TestLogin(t *testing.T) {
 		testBearerToken := "testBearerToken"
 		userService := &MockUserService{
 			UsersRegistered: users,
-			LoginFunc: func(username, password string) (success bool, bearerToken string, err error) {
-				return true, testBearerToken, nil
+			LoginFunc: func(username, password string) (success bool, bearerToken string) {
+				return true, testBearerToken
 			},
 			BearerTokenExistsFunc: func(bearerToken string) bool {
 				return true
@@ -124,8 +124,8 @@ func TestAddSoundcloudUrl(t *testing.T) {
 		testBearerToken := "testBearerToken"
 		userService := &MockUserService{
 			UsersRegistered: users,
-			LoginFunc: func(username, password string) (success bool, bearerToken string, err error) {
-				return true, testBearerToken, nil
+			LoginFunc: func(username, password string) (success bool, bearerToken string) {
+				return true, testBearerToken
 			},
 			BearerTokenExistsFunc: func(bearerToken string) bool {
 				return true

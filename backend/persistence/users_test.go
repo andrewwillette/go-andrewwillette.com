@@ -3,18 +3,15 @@ package persistence
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"os"
 	"testing"
 )
-
-const testDatabaseFile = "testDatabase.db"
 
 type UsersTestSuite struct {
 	suite.Suite
 }
 
-func deleteDatabase() {
-	os.Remove(testDatabaseFile)
+func TestUsersSuite(t *testing.T) {
+	suite.Run(t, new(UsersTestSuite))
 }
 
 func (suite *UsersTestSuite) SetupTest() {
@@ -26,7 +23,6 @@ func (suite *UsersTestSuite) TearDownSuite() {
 }
 
 func (suite *UsersTestSuite) TestCreateUserTable() {
-	//deleteTestDatabase()
 	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
@@ -37,14 +33,12 @@ func (suite *UsersTestSuite) TestCreateUserTable() {
 }
 
 func (suite *UsersTestSuite) TestCreateUser_Valid() {
-	//deleteTestDatabase()
 	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
 	username := "usernameOne"
 	password := "passwordOne"
 	err := userService.addUser(username, password)
 	if err != nil {
-		println(err.Error())
 		suite.T().Logf("failed to add user")
 		suite.T().Fail()
 	}
@@ -54,7 +48,6 @@ func (suite *UsersTestSuite) TestCreateUser_Valid() {
 }
 
 func (suite *UsersTestSuite) TestUpdateUserBearerToken_Valid() {
-	//deleteTestDatabase()
 	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
 	username := "usernameOne"
@@ -75,7 +68,7 @@ func (suite *UsersTestSuite) TestUpdateUserBearerToken_Valid() {
 	assert.Equal(suite.T(), user.Password, password)
 	assert.Equal(suite.T(), user.BearerToken, bearerToken)
 
-	userExists, err := userService.userExists(&User{Username: username, Password: password})
+	userExists := userService.userExists(&User{Username: username, Password: password})
 	if err != nil {
 		suite.T().Log(err)
 		suite.T().Fail()
@@ -84,8 +77,4 @@ func (suite *UsersTestSuite) TestUpdateUserBearerToken_Valid() {
 
 	bearerTokenExists := userService.BearerTokenExists(bearerToken)
 	assert.True(suite.T(), bearerTokenExists)
-}
-
-func TestUsersSuite(t *testing.T) {
-	suite.Run(t, new(UsersTestSuite))
 }
