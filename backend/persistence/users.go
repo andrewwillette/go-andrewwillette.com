@@ -1,11 +1,8 @@
 package persistence
 
 import (
-	"crypto/sha1"
 	"database/sql"
 	"fmt"
-	"math/rand"
-
 	"github.com/andrewwillette/willette_api/logging"
 )
 
@@ -221,26 +218,4 @@ func (u *UserService) BearerTokenExists(bearerToken string) bool {
 	} else {
 		return false
 	}
-}
-
-func newSHA1Hash(n ...int) string {
-	noRandomCharacters := 32
-	if len(n) > 0 {
-		noRandomCharacters = n[0]
-	}
-	randString := randomString(noRandomCharacters)
-	hash := sha1.New()
-	hash.Write([]byte(randString))
-	bs := hash.Sum(nil)
-	return fmt.Sprintf("%x", bs)
-}
-
-var characterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-func randomString(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = characterRunes[rand.Intn(len(characterRunes))]
-	}
-	return string(b)
 }
