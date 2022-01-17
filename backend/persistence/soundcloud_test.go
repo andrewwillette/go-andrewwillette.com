@@ -23,7 +23,7 @@ func (suite *SoundcloudTestSuite) TearDownSuite() {
 }
 
 func (suite *SoundcloudTestSuite) TestCreateSoundcloudUrlTable() {
-	soundcloudUrlService := &SoundcloudUrlService{Sqlite: testDatabaseFile}
+	soundcloudUrlService := &SoundcloudUrlService{SqliteFile: testDatabaseFile}
 	soundcloudUrlService.createSoundcloudUrlTable()
 	userService := &UserService{SqliteDbFile: testDatabaseFile}
 	userService.createUserTable()
@@ -33,7 +33,10 @@ func (suite *SoundcloudTestSuite) TestCreateSoundcloudUrlTable() {
 	}
 	assert.Equal(suite.T(), tables[0], "soundcloudUrl")
 	soundcloudUrl := "soundcloud.com/example"
-	soundcloudUrlService.AddSoundcloudUrl(soundcloudUrl)
+	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrl)
+	if err != nil {
+		suite.T().Fail()
+	}
 	soundcloudUrls, err := soundcloudUrlService.GetAllSoundcloudUrls()
 	if err != nil {
 		suite.T().Fail()

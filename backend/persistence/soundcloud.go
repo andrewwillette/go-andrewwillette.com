@@ -10,17 +10,17 @@ import (
 const soundcloudTable = "soundcloudUrl"
 
 type SoundcloudUrlService struct {
-	Sqlite string
+	SqliteFile string
 }
 
 func (u *SoundcloudUrlService) AddSoundcloudUrl(url string) error {
-	db, err := sql.Open("sqlite3", u.Sqlite)
+	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error opening database in AddSoundcloudUrl")
 		return err
 	}
 	defer db.Close()
-	insertUrlStatement := fmt.Sprintf("INSERT INTO %s(url) VALUES (?)", soundcloudTable)
+	insertUrlStatement := fmt.Sprintf("INSERT INTO %s(url,uiOrder) VALUES (?, 0)", soundcloudTable)
 	addSoundcloudPreparedStatement, err := db.Prepare(insertUrlStatement)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error preparing add soundcloud url sql query")
@@ -35,7 +35,7 @@ func (u *SoundcloudUrlService) AddSoundcloudUrl(url string) error {
 }
 
 func (u *SoundcloudUrlService) DeleteSoundcloudUrl(url string) error {
-	db, err := sql.Open("sqlite3", u.Sqlite)
+	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error opening database in DeleteSoundcloudUrl")
 		return err
@@ -55,15 +55,36 @@ func (u *SoundcloudUrlService) DeleteSoundcloudUrl(url string) error {
 	return nil
 }
 
+func (u *SoundcloudUrlService) modifyTableWithUiOrder() {
+	db, err := sql.Open("sqlite3", u.SqliteFile)
+	if err != nil {
+		logging.GlobalLogger.Err(err).Msg("Error opening database in createSoundcloudUrl table")
+		return
+	}
+	modifyUiOrderSQL := fmt.Sprintf("ALTER TABLE %s"+
+		" ADD \"uiOrder\" integer", soundcloudTable)
+	statement, err := db.Prepare(modifyUiOrderSQL) // Prepare SQL Statement
+	if err != nil {
+		logging.GlobalLogger.Err(err).Msg("Error preparing modify soundcloudurl statement")
+		return
+	}
+	_, err = statement.Exec()
+	if err != nil {
+		logging.GlobalLogger.Err(err).Msg("Error executing modify soundcloudurl table sql")
+		return
+	}
+}
+
 func (u *SoundcloudUrlService) createSoundcloudUrlTable() {
-	db, err := sql.Open("sqlite3", u.Sqlite)
+	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error opening database in createSoundcloudUrl table")
 		return
 	}
 	createSoundcloudTableSQL := fmt.Sprintf("CREATE TABLE %s ("+
 		"\"id\" integer NOT NULL PRIMARY KEY AUTOINCREMENT,"+
-		"\"url\" TEXT"+
+		"\"url\" text,"+
+		"\"uiOrder\" integer"+
 		")", soundcloudTable)
 	statement, err := db.Prepare(createSoundcloudTableSQL) // Prepare SQL Statement
 	if err != nil {
@@ -79,7 +100,7 @@ func (u *SoundcloudUrlService) createSoundcloudUrlTable() {
 
 // GetAllSoundcloudUrls get all soundcloud urls in database
 func (u *SoundcloudUrlService) GetAllSoundcloudUrls() ([]string, error) {
-	db, err := sql.Open("sqlite3", u.Sqlite)
+	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error opening database in GetAllSoundcloudUrls")
 		return nil, err
@@ -95,14 +116,15 @@ func (u *SoundcloudUrlService) GetAllSoundcloudUrls() ([]string, error) {
 	defer row.Close()
 	var soundcloudUrls []string
 	for row.Next() {
-		var url string
-		var urlTwo string
-		err := row.Scan(&url, &urlTwo)
+		var id string
+		var soundcloudUrl string
+		var uiOrder int
+		err := row.Scan(&id, &soundcloudUrl, &uiOrder)
 		if err != nil {
 			logging.GlobalLogger.Err(err).Msg("Error scanning sql row in get all soundcloud urls")
 			return nil, err
 		}
-		soundcloudUrls = append(soundcloudUrls, urlTwo)
+		soundcloudUrls = append(soundcloudUrls, soundcloudUrl)
 	}
 	return soundcloudUrls, nil
 }

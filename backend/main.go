@@ -12,7 +12,7 @@ func main() {
 	logging.GlobalLogger.Info().Msg("Starting application")
 	persistence.InitDatabaseIdempotent(SqlLiteDatabaseFileName)
 	userService := &persistence.UserService{SqliteDbFile: SqlLiteDatabaseFileName}
-	soundcloudUrlService := &persistence.SoundcloudUrlService{Sqlite: SqlLiteDatabaseFileName}
+	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: SqlLiteDatabaseFileName}
 	websiteServer := server.NewWilletteAPIServer(userService, soundcloudUrlService)
 	websiteServer.RunServer()
 }

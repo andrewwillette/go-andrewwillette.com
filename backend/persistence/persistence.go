@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-// Creates Sqlite database with filename
+// Creates SqliteFile database with filename
 func createDatabase(databaseFile string) error {
 	file, err := os.Create(databaseFile)
 	if err != nil {
@@ -59,7 +59,7 @@ func InitDatabaseIdempotent(sqliteFile string) {
 		userService := &UserService{SqliteDbFile: sqliteFile}
 		userService.createUserTable()
 
-		soundcloudUrlService := &SoundcloudUrlService{Sqlite: sqliteFile}
+		soundcloudUrlService := &SoundcloudUrlService{SqliteFile: sqliteFile}
 		soundcloudUrlService.createSoundcloudUrlTable()
 	}
 }
