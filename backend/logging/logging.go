@@ -70,8 +70,7 @@ func Configure(config LogConfig) *Logger {
 		Str("fileName", config.Filename).
 		Int("maxSizeMB", config.MaxSizeMB).
 		Int("maxBackups", config.MaxBackups).
-		Int("maxAgeInDays", config.MaxAge).
-		Msg("logging configured")
+		Int("maxAgeInDays", config.MaxAge)
 
 	return &Logger{
 		Logger: &logger,

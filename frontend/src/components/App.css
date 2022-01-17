@@ -53,6 +53,10 @@ a:hover {
     background: #ff0000;
 }
 
+#loginSuccessBanner {
+    background: #00ff00;
+}
+
 .personalImage {
     height: 40vmin;
     pointer-events: none;

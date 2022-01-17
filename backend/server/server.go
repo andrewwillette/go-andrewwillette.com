@@ -140,7 +140,7 @@ func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 		logging.GlobalLogger.Info().Msg("Login Successful.")
 		return
 	} else {
-		logging.GlobalLogger.Info().Msg("Login failed with username, password")
+		logging.GlobalLogger.Info().Msg(fmt.Sprintf("Login failed with username: %s, password: %s", user.Username, user.Password))
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

@@ -2,11 +2,12 @@ import React, {Component} from 'react';
 import {deleteSoundcloudUrl, getSoundcloudUrls, addSoundcloudUrl, SoundcloudUrl, login} from "../../services/andrewwillette";
 import {setBearerToken} from "../../persistence/localstorage";
 import {UnauthorizedBanner} from "./UnauthorizedBanner";
+import {LoginSuccessBanner} from "./LoginSuccessBanner";
 
 export class AdminPage extends Component<any, any> {
     constructor(props: any) {
         super(props);
-        this.state = {soundcloudUrls: [], unauthorizedReason: null, showLoginSuccess: false}
+        this.state = {soundcloudUrls: [], unauthorizedReason: null, loginSuccess: false}
 
         this.sendLogin = this.sendLogin.bind(this);
     }
@@ -46,34 +47,28 @@ export class AdminPage extends Component<any, any> {
 
         let responsePromise = login(username, password)
         responsePromise.then(response => {
-            console.log("response from login is")
-            console.log(response)
             if(response.status === 200) {
                 const token = response.parsedBody
-                console.log(`token is ${token}`)
-                console.log(typeof response.parsedBody?.bearerToken)
-                console.log(typeof token)
-                console.log(response.parsedBody)
-
                 if(token) {
                     setBearerToken(String(token))
-                    this.setState({unauthorizedReason: null})
+                    this.setState({unauthorizedReason: null, loginSuccess: true})
                 }
             } else {
-                this.setState({unauthorizedReason: "Login Failed"});
-
-                console.log(`status is ${response.status}`)
+                this.setState({unauthorizedReason: "Login Failed", loginSuccess: false});
             }
         });
     }
 
-    renderUnauthorizedBanner(unauthorizedReason: string) {
+    renderAdminBanner(unauthorizedReason: string, loginSuccess: boolean) {
         if (unauthorizedReason !== null) {
             return <UnauthorizedBanner unauthorizedReason={unauthorizedReason}/>
+        } else if (loginSuccess) {
+            return <LoginSuccessBanner/>
         } else {
-            return <></>;
+            return <></>
         }
     }
+
     renderAudioManagementList(soundcloudUrls: SoundcloudUrl[]) {
         if (soundcloudUrls === null) {
             return <></>;
@@ -93,11 +88,11 @@ export class AdminPage extends Component<any, any> {
     }
 
     render() {
-        const {soundcloudUrls, unauthorizedReason} = this.state;
+        const {soundcloudUrls, unauthorizedReason, loginSuccess} = this.state;
         return (
             <div>
                 <div>
-                    {this.renderUnauthorizedBanner(unauthorizedReason)}
+                    {this.renderAdminBanner(unauthorizedReason, loginSuccess)}
                 </div>
                 <div>
                     <label htmlFor={"username"}>Username</label>

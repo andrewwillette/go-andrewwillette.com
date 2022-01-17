@@ -4,7 +4,7 @@ export class LoginSuccessBanner extends Component<any, any> {
     render() {
         return (
             <div id={"loginSuccessBanner"}>
-                Login Successful!
+                Login Successful
             </div>
         );
     }
