@@ -13,7 +13,7 @@ import (
 )
 
 type MockUserService struct {
-	UsersRegistered       []User
+	UsersRegistered       []UserJson
 	LoginFunc             func(username string, password string) (success bool, bearerToken string)
 	BearerTokenExistsFunc func(bearerToken string) bool
 }
@@ -48,8 +48,8 @@ func (m MockSoundcloudUrlService) DeleteSoundcloudUrl(s string) error {
 func TestLogin(t *testing.T) {
 	t.Run("invalid user login", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		body := User{Username: "hello", Password: "passwordWorld"}
-		var users []User
+		body := UserJson{Username: "hello", Password: "passwordWorld"}
+		var users []UserJson
 		userService := &MockUserService{
 			UsersRegistered: users,
 			LoginFunc: func(username, password string) (success bool, bearerToken string) {
@@ -70,7 +70,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("valid user login", func(t *testing.T) {
-		var users []User
+		var users []UserJson
 		testBearerToken := "testBearerToken"
 		userService := &MockUserService{
 			UsersRegistered: users,
@@ -87,7 +87,7 @@ func TestLogin(t *testing.T) {
 		}
 		server := NewWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
-		body := User{Username: "hello", Password: "passwordWorld"}
+		body := UserJson{Username: "hello", Password: "passwordWorld"}
 		request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
 		server.login(response, request)
 		assert.Equal(t, 200, response.Code)
@@ -95,7 +95,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("GET returns 405", func(t *testing.T) {
-		var users []User
+		var users []UserJson
 		testBearerToken := "testBearerToken"
 		userService := &MockUserService{
 			UsersRegistered: users,
@@ -112,7 +112,7 @@ func TestLogin(t *testing.T) {
 		}
 		server := NewWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
-		body := User{Username: "hello", Password: "passwordWorld"}
+		body := UserJson{Username: "hello", Password: "passwordWorld"}
 		request := httptest.NewRequest(http.MethodGet, loginEndpoint, userToJSON(body))
 		server.login(response, request)
 		assert.Equal(t, 405, response.Code)
@@ -120,7 +120,7 @@ func TestLogin(t *testing.T) {
 }
 func TestAddSoundcloudUrl(t *testing.T) {
 	t.Run("valid bearer token", func(t *testing.T) {
-		var users []User
+		var users []UserJson
 		testBearerToken := "testBearerToken"
 		userService := &MockUserService{
 			UsersRegistered: users,
@@ -148,7 +148,7 @@ func TestAddSoundcloudUrl(t *testing.T) {
 		server := NewWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
 		newSoundcloudUrl := "testsoundcloudurl.com"
-		body := AuthenticatedSoundcloudUrl{Url: newSoundcloudUrl, BearerToken: testBearerToken}
+		body := AuthenticatedSoundcloudUrlJson{Url: newSoundcloudUrl, BearerToken: testBearerToken}
 		request := httptest.NewRequest(http.MethodPost, loginEndpoint, authenticatedSoundcloudUrlToJSON(body))
 		server.addSoundcloudUrl(response, request)
 		responseTwo := httptest.NewRecorder()
@@ -161,12 +161,12 @@ func TestAddSoundcloudUrl(t *testing.T) {
 	})
 }
 
-func authenticatedSoundcloudUrlToJSON(url AuthenticatedSoundcloudUrl) io.Reader {
+func authenticatedSoundcloudUrlToJSON(url AuthenticatedSoundcloudUrlJson) io.Reader {
 	marshalledUser, _ := json.Marshal(url)
 	return bytes.NewReader(marshalledUser)
 }
 
-func userToJSON(user User) io.Reader {
+func userToJSON(user UserJson) io.Reader {
 	marshalledUser, _ := json.Marshal(user)
 	return bytes.NewReader(marshalledUser)
 }

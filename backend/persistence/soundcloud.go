@@ -3,7 +3,6 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
-
 	"github.com/andrewwillette/willette_api/logging"
 )
 
@@ -13,6 +12,32 @@ type SoundcloudUrlService struct {
 	SqliteFile string
 }
 
+type SoundcloudUrl struct {
+	Id      int
+	Url     string
+	UiOrder int
+}
+
+func (u *SoundcloudUrlService) UpdateSoundcloudUrlUiOrder(url string, uiOrder int) error {
+	db, err := sql.Open("sqlite3", u.SqliteFile)
+	if err != nil {
+		logging.GlobalLogger.Err(err).Msg("Error opening database in UpdateSoundcloudUrlUiOrder")
+		return err
+	}
+	updateUrlStatement := fmt.Sprintf("UPDATE %s SET uiOrder = %d WHERE url = \"%s\"", soundcloudTable, uiOrder, url)
+	preparedStatement, err := db.Prepare(updateUrlStatement)
+	if err != nil {
+		logging.GlobalLogger.Err(err).Msg("Error preparing sql in UpdateSoundcloudUrlUiOrder")
+		return err
+	}
+	_, err = preparedStatement.Exec()
+	if err != nil {
+		logging.GlobalLogger.Err(err).Msg("Error executing sql in UpdateSoundcloudUrlUiOrder")
+		return err
+	}
+	return nil
+}
+
 func (u *SoundcloudUrlService) AddSoundcloudUrl(url string) error {
 	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
@@ -20,7 +45,7 @@ func (u *SoundcloudUrlService) AddSoundcloudUrl(url string) error {
 		return err
 	}
 	defer db.Close()
-	insertUrlStatement := fmt.Sprintf("INSERT INTO %s(url,uiOrder) VALUES (?, 0)", soundcloudTable)
+	insertUrlStatement := fmt.Sprintf("INSERT INTO %s(url) VALUES (?)", soundcloudTable)
 	addSoundcloudPreparedStatement, err := db.Prepare(insertUrlStatement)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error preparing add soundcloud url sql query")
@@ -55,26 +80,6 @@ func (u *SoundcloudUrlService) DeleteSoundcloudUrl(url string) error {
 	return nil
 }
 
-func (u *SoundcloudUrlService) modifyTableWithUiOrder() {
-	db, err := sql.Open("sqlite3", u.SqliteFile)
-	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error opening database in createSoundcloudUrl table")
-		return
-	}
-	modifyUiOrderSQL := fmt.Sprintf("ALTER TABLE %s"+
-		" ADD \"uiOrder\" integer", soundcloudTable)
-	statement, err := db.Prepare(modifyUiOrderSQL) // Prepare SQL Statement
-	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error preparing modify soundcloudurl statement")
-		return
-	}
-	_, err = statement.Exec()
-	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error executing modify soundcloudurl table sql")
-		return
-	}
-}
-
 func (u *SoundcloudUrlService) createSoundcloudUrlTable() {
 	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
@@ -98,33 +103,33 @@ func (u *SoundcloudUrlService) createSoundcloudUrlTable() {
 	}
 }
 
-// GetAllSoundcloudUrls get all soundcloud urls in database
-func (u *SoundcloudUrlService) GetAllSoundcloudUrls() ([]string, error) {
+// GetAllSoundcloudUrls get all SoundcloudUrls in database
+func (u *SoundcloudUrlService) GetAllSoundcloudUrls() ([]SoundcloudUrl, error) {
 	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error opening database in GetAllSoundcloudUrls")
 		return nil, err
 	}
 	defer db.Close()
-	// TODO : prepare this statement
-	selectAllSoundcloudStatement := fmt.Sprintf("SELECT * FROM %s;", soundcloudTable)
-	row, err := db.Query(selectAllSoundcloudStatement)
+	selectAllSoundcloudStatement := fmt.Sprintf("SELECT id, url, uiOrder FROM %s;", soundcloudTable)
+	preparedStatement, err := db.Prepare(selectAllSoundcloudStatement)
 	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error executing get all soundcloud url sql")
-		return nil, err
+		logging.GlobalLogger.Err(err).Msg("Failed to prepare get all soundcloud sql statement.")
 	}
-	defer row.Close()
-	var soundcloudUrls []string
-	for row.Next() {
-		var id string
-		var soundcloudUrl string
-		var uiOrder int
-		err := row.Scan(&id, &soundcloudUrl, &uiOrder)
-		if err != nil {
-			logging.GlobalLogger.Err(err).Msg("Error scanning sql row in get all soundcloud urls")
-			return nil, err
+	soundcloudUrlsArrayMap, err := executeQuery(preparedStatement)
+	var soundcloudUrls []SoundcloudUrl
+	for _, scUrl := range soundcloudUrlsArrayMap {
+		var soundCloudUrl SoundcloudUrl
+		if scUrl["url"] != nil {
+			soundCloudUrl.Url = fmt.Sprint(scUrl["url"])
 		}
-		soundcloudUrls = append(soundcloudUrls, soundcloudUrl)
+		if scUrl["id"] != nil {
+			soundCloudUrl.Id = int(scUrl["id"].(int64))
+		}
+		if scUrl["uiOrder"] != nil {
+			soundCloudUrl.UiOrder = int(scUrl["uiOrder"].(int64))
+		}
+		soundcloudUrls = append(soundcloudUrls, soundCloudUrl)
 	}
 	return soundcloudUrls, nil
 }

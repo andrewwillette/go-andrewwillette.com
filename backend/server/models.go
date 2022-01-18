@@ -1,20 +1,22 @@
 package server
 
-type SoundcloudUrl struct {
-	Url string `json:"url"`
+type SoundcloudUrlJson struct {
+	Url     string `json:"url"`
+	UiOrder string `json:"uiOrder"`
+	Id      string `json:"id"`
 }
 
-type User struct {
+type UserJson struct {
 	Username    string `json:"username"`
 	Password    string `json:"password"`
 	BearerToken string `json:"bearerToken"`
 }
 
-type BearerToken struct {
+type BearerTokenJson struct {
 	BearerToken string `json:"bearerToken"`
 }
 
-type AuthenticatedSoundcloudUrl struct {
+type AuthenticatedSoundcloudUrlJson struct {
 	Url         string `json:"url"`
 	BearerToken string `json:"bearerToken"`
 }

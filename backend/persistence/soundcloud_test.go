@@ -15,25 +15,23 @@ func TestSoundcloudSuite(t *testing.T) {
 }
 
 func (suite *SoundcloudTestSuite) SetupTest() {
-	deleteDatabase()
+	deleteTestDatabase()
 }
 
 func (suite *SoundcloudTestSuite) TearDownSuite() {
-	deleteDatabase()
+	deleteTestDatabase()
 }
 
-func (suite *SoundcloudTestSuite) TestCreateSoundcloudUrlTable() {
+func (suite *SoundcloudTestSuite) TestSoundcloudUrlService() {
 	soundcloudUrlService := &SoundcloudUrlService{SqliteFile: testDatabaseFile}
 	soundcloudUrlService.createSoundcloudUrlTable()
-	userService := &UserService{SqliteDbFile: testDatabaseFile}
-	userService.createUserTable()
 	tables, err := getAllTables(testDatabaseFile)
 	if err != nil {
 		suite.T().Fail()
 	}
-	assert.Equal(suite.T(), tables[0], "soundcloudUrl")
-	soundcloudUrl := "soundcloud.com/example"
-	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrl)
+	assert.Contains(suite.T(), tables, soundcloudTable)
+	soundcloudUrlOne := "soundcloud.com/example"
+	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlOne)
 	if err != nil {
 		suite.T().Fail()
 	}
@@ -41,13 +39,38 @@ func (suite *SoundcloudTestSuite) TestCreateSoundcloudUrlTable() {
 	if err != nil {
 		suite.T().Fail()
 	}
-	assert.Contains(suite.T(), soundcloudUrls, soundcloudUrl)
-
+	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlOne, 0))
 	soundcloudUrlTwo := "soundcloud.com/numbertwo"
-	soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlTwo)
+	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlTwo)
+	if err != nil {
+		suite.T().Fail()
+		return
+	}
 	soundcloudUrls, err = soundcloudUrlService.GetAllSoundcloudUrls()
 	if err != nil {
 		suite.T().Fail()
 	}
-	assert.Contains(suite.T(), soundcloudUrls, soundcloudUrlTwo)
+	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlTwo, 0))
+	newUiOrderOne := 23
+	newUiOrderTwo := 5
+	err = soundcloudUrlService.UpdateSoundcloudUrlUiOrder(soundcloudUrlOne, newUiOrderOne)
+	err = soundcloudUrlService.UpdateSoundcloudUrlUiOrder(soundcloudUrlTwo, newUiOrderTwo)
+	if err != nil {
+		suite.T().Fail()
+	}
+	soundcloudUrls, err = soundcloudUrlService.GetAllSoundcloudUrls()
+	if err != nil {
+		suite.T().Fail()
+	}
+	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlOne, newUiOrderOne))
+	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlTwo, newUiOrderTwo))
+}
+
+func soundcloudUrlExists(soundcloudUrls []SoundcloudUrl, url string, uiOrder int) bool {
+	for _, value := range soundcloudUrls {
+		if value.Url == url && value.UiOrder == uiOrder {
+			return true
+		}
+	}
+	return false
 }

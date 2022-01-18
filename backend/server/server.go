@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/andrewwillette/willette_api/logging"
+	"github.com/andrewwillette/willette_api/persistence"
 	"net/http"
 )
 
@@ -19,7 +20,7 @@ type UserService interface {
 }
 
 type SoundcloudUrlService interface {
-	GetAllSoundcloudUrls() ([]string, error)
+	GetAllSoundcloudUrls() ([]persistence.SoundcloudUrl, error)
 	AddSoundcloudUrl(string) error
 	DeleteSoundcloudUrl(string) error
 }
@@ -43,9 +44,9 @@ func (u *WilletteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, _ *http.
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	var soundcloudUrls []SoundcloudUrl
+	var soundcloudUrls []SoundcloudUrlJson
 	for i := 0; i < len(urls); i++ {
-		soundcloudUrls = append(soundcloudUrls, SoundcloudUrl{Url: urls[i]})
+		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlJson{Url: urls[i].Url})
 	}
 	if err = json.NewEncoder(w).Encode(soundcloudUrls); err != nil {
 		logging.GlobalLogger.Err(err).Msg("Failed to encode soundcloud urls in response.")
@@ -60,7 +61,7 @@ func (u *WilletteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData AuthenticatedSoundcloudUrl
+	var soundcloudData AuthenticatedSoundcloudUrlJson
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		logging.GlobalLogger.Info().Msg("Failed to decode soundcloud data.")
@@ -89,7 +90,7 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData AuthenticatedSoundcloudUrl
+	var soundcloudData AuthenticatedSoundcloudUrlJson
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		logging.GlobalLogger.Info().Msg("Failed to decode soundcloud data in delete.")
@@ -120,7 +121,7 @@ func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	var userCredentials User
+	var userCredentials UserJson
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
 		logging.GlobalLogger.Info().Msg("Error decoding user credentials from request body.")
 		http.Error(w, fmt.Sprintf("Error decoding user credentials from request body. %v", err), http.StatusBadRequest)
@@ -129,7 +130,7 @@ func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	user := User{Username: userCredentials.Username, Password: userCredentials.Password}
+	user := UserJson{Username: userCredentials.Username, Password: userCredentials.Password}
 	loginSuccessful, bearerToken := u.userService.Login(user.Username, user.Password)
 	if loginSuccessful {
 		if err := json.NewEncoder(w).Encode(bearerToken); err != nil {

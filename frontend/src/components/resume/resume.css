@@ -13,7 +13,10 @@
 #resume-employment li text {
     float: right;
 }
-#resume-page ul {
+#resume-page {
     text-align: left;
 }
 
+#resume-page .leftFloat {
+    /*text-*/
+}

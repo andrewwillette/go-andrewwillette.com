@@ -15,11 +15,11 @@ func TestUsersSuite(t *testing.T) {
 }
 
 func (suite *UsersTestSuite) SetupTest() {
-	deleteDatabase()
+	deleteTestDatabase()
 }
 
 func (suite *UsersTestSuite) TearDownSuite() {
-	deleteDatabase()
+	deleteTestDatabase()
 }
 
 func (suite *UsersTestSuite) TestCreateUserTable() {
