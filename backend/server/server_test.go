@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/andrewwillette/willette_api/persistence"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -27,13 +28,13 @@ func (m *MockUserService) BearerTokenExists(bearerToken string) bool {
 }
 
 type MockSoundcloudUrlService struct {
-	GetAllSoundcloudUrlsFunc func() ([]string, error)
+	GetAllSoundcloudUrlsFunc func() ([]persistence.SoundcloudUrl, error)
 	AddSoundcloudUrlsFunc    func(s string) error
 	DeleteSoundcloudUrlFunc  func(s string) error
-	SoundcloudUrls           []string
+	SoundcloudUrls           []persistence.SoundcloudUrl
 }
 
-func (m *MockSoundcloudUrlService) GetAllSoundcloudUrls() ([]string, error) {
+func (m *MockSoundcloudUrlService) GetAllSoundcloudUrls() ([]persistence.SoundcloudUrl, error) {
 	return m.GetAllSoundcloudUrlsFunc()
 }
 
@@ -59,7 +60,7 @@ func TestLogin(t *testing.T) {
 				return true
 			},
 		}
-		var soundcloudUrls []string
+		var soundcloudUrls []persistence.SoundcloudUrl
 		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
 		}
@@ -81,7 +82,7 @@ func TestLogin(t *testing.T) {
 				return true
 			},
 		}
-		var soundcloudUrls []string
+		var soundcloudUrls []persistence.SoundcloudUrl
 		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
 		}
@@ -106,7 +107,7 @@ func TestLogin(t *testing.T) {
 				return true
 			},
 		}
-		var soundcloudUrls []string
+		var soundcloudUrls []persistence.SoundcloudUrl
 		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
 		}
@@ -131,14 +132,16 @@ func TestAddSoundcloudUrl(t *testing.T) {
 				return true
 			},
 		}
-		soundcloudUrls := []string{"urlone.com", "urltwo.com"}
+		soundcloudUrls := []persistence.SoundcloudUrl{{Url: "urlone.com", UiOrder: 1, Id: 1},
+			{Url: "urltwo.com", Id: 2, UiOrder: 3}}
 		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
-			GetAllSoundcloudUrlsFunc: func() ([]string, error) {
+			GetAllSoundcloudUrlsFunc: func() ([]persistence.SoundcloudUrl, error) {
 				return soundcloudUrls, nil
 			},
 			AddSoundcloudUrlsFunc: func(s string) error {
-				soundcloudUrls = append(soundcloudUrls, s)
+				soundcloudUrl := persistence.SoundcloudUrl{Url: s}
+				soundcloudUrls = append(soundcloudUrls, soundcloudUrl)
 				return nil
 			},
 			DeleteSoundcloudUrlFunc: func(s string) error {
@@ -155,9 +158,17 @@ func TestAddSoundcloudUrl(t *testing.T) {
 		requestTwo := httptest.NewRequest(http.MethodGet, getSoundcloudAllEndpoint, nil)
 		server.getAllSoundcloudUrls(responseTwo, requestTwo)
 		fmt.Printf("new soundcloud url is %s\n", responseTwo.Body.String())
-		assert.Contains(t, responseTwo.Body.String(), newSoundcloudUrl)
-		assert.Contains(t, responseTwo.Body.String(), soundcloudUrls[0])
-		assert.Contains(t, responseTwo.Body.String(), soundcloudUrls[1])
+		decoder := json.NewDecoder(responseTwo.Body)
+		var soundcloudData []persistence.SoundcloudUrl
+		err := decoder.Decode(&soundcloudData)
+		if err != nil {
+			t.Log("failed to decode soundcloud data")
+			t.Fail()
+		}
+		assert.ElementsMatch(t, soundcloudData, []persistence.SoundcloudUrl{
+			{Id: 0, Url: "urlone.com", UiOrder: 1},
+			{Id: 0, Url: "urltwo.com", UiOrder: 3},
+			{Id: 0, Url: "testsoundcloudurl.com", UiOrder: 0}})
 	})
 }
 

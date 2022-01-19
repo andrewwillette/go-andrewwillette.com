@@ -116,7 +116,7 @@ func (u *SoundcloudUrlService) GetAllSoundcloudUrls() ([]SoundcloudUrl, error) {
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Failed to prepare get all soundcloud sql statement.")
 	}
-	soundcloudUrlsArrayMap, err := executeQuery(preparedStatement)
+	soundcloudUrlsArrayMap, err := getQueryResponseAsMap(preparedStatement)
 	var soundcloudUrls []SoundcloudUrl
 	for _, scUrl := range soundcloudUrlsArrayMap {
 		var soundCloudUrl SoundcloudUrl

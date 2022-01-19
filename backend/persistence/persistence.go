@@ -54,10 +54,10 @@ func createDatabase(databaseFile string) error {
 }
 
 //Big money, we out here
-func executeQuery(sqlQuery *sql.Stmt) ([]map[string]interface{}, error) {
+func getQueryResponseAsMap(sqlQuery *sql.Stmt) ([]map[string]interface{}, error) {
 	rows, err := sqlQuery.Query()
 	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error executing executeQuery sql query.")
+		logging.GlobalLogger.Err(err).Msg("Error executing getQueryResponseAsMap sql query.")
 		return nil, err
 	}
 	// very important, returns the column names
@@ -91,40 +91,15 @@ func getTableColumnNames(databaseFile, tableName string) ([]string, error) {
 	getAllProperties := fmt.Sprintf("pragma table_info(%s)", tableName)
 	addSoundcloudPreparedStatement, err := sqliteDatabase.Prepare(getAllProperties)
 	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error preparing add soundcloud url sql query")
+		logging.GlobalLogger.Err(err).Msg("Error preparing getAllColumnNames sql.")
 		return nil, err
 	}
-	rows, err := addSoundcloudPreparedStatement.Query()
-	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error executing add soundcloud url sql")
-		return nil, err
+	values, err := getQueryResponseAsMap(addSoundcloudPreparedStatement)
+	var columnNames []string
+	for _, v := range values {
+		columnNames = append(columnNames, fmt.Sprint(v["name"]))
 	}
-	// very important, returns the column names
-	columnNames, err := rows.Columns()
-	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error getting row columns")
-		return nil, err
-	}
-	//allRows := make([]map[string]interface{}, 0)
-	var nameColumnValues []string
-	columnValues := make([]interface{}, len(columnNames))
-	defer rows.Close()
-	for rows.Next() {
-		rowAsMap := make(map[string]interface{}, len(columnNames))
-		for i := range columnValues {
-			columnValues[i] = new(interface{})
-		}
-		if err := rows.Scan(columnValues...); err != nil {
-			logging.GlobalLogger.Err(err).Msg("Error getting column values")
-			return nil, err
-		}
-		for i, col := range columnNames {
-			rowAsMap[col] = *columnValues[i].(*interface{})
-		}
-		nameColumnValues = append(nameColumnValues, fmt.Sprint(rowAsMap["name"]))
-		//allRows = append(allRows, rowAsMap) // unnecessary but keeping for future reference
-	}
-	return nameColumnValues, nil
+	return columnNames, nil
 }
 
 func getAllTables(databaseFile string) ([]string, error) {

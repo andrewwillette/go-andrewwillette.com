@@ -2,8 +2,8 @@ package server
 
 type SoundcloudUrlJson struct {
 	Url     string `json:"url"`
-	UiOrder string `json:"uiOrder"`
-	Id      string `json:"id"`
+	UiOrder int    `json:"uiOrder"`
+	Id      int    `json:"id"`
 }
 
 type UserJson struct {

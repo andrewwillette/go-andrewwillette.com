@@ -45,11 +45,11 @@ func (u *WilletteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, _ *http.
 		return
 	}
 	var soundcloudUrls []SoundcloudUrlJson
-	for i := 0; i < len(urls); i++ {
-		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlJson{Url: urls[i].Url})
+	for _, url := range urls {
+		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlJson{Url: url.Url, UiOrder: url.UiOrder})
 	}
 	if err = json.NewEncoder(w).Encode(soundcloudUrls); err != nil {
-		logging.GlobalLogger.Err(err).Msg("Failed to encode soundcloud urls in response.")
+		logging.GlobalLogger.Err(err).Msg("Failed to encode soundcloud urls in http response.")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
