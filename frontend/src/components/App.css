@@ -12,7 +12,6 @@ code {
     monospace;
 }
 
-/* navbar */
 .navbar {
     list-style:none;
     padding-left: 0;
@@ -67,3 +66,18 @@ a:hover {
     display: inline-block;
 }
 
+#adminPage input {
+    margin: 1em;
+}
+
+.uiOrderInput {
+    text-align: center;
+}
+
+.adminSoundcloudUrlEditbox {
+    border:solid chocolate;
+}
+
+#adminPage button {
+    margin-bottom: 1em;
+}

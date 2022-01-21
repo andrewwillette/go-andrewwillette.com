@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {deleteSoundcloudUrl, getSoundcloudUrls, addSoundcloudUrl, SoundcloudUrl, login} from "../../services/andrewwillette";
+import {deleteSoundcloudUrl, getSoundcloudUrls, addSoundcloudUrl, SoundcloudUrl, login, updateSoundcloudUrls} from "../../services/andrewwillette";
 import {setBearerToken} from "../../persistence/localstorage";
 import {UnauthorizedBanner} from "./UnauthorizedBanner";
 import {LoginSuccessBanner} from "./LoginSuccessBanner";
@@ -9,7 +9,10 @@ export class AdminPage extends Component<any, any> {
         super(props);
         this.state = {soundcloudUrls: [], unauthorizedReason: null, loginSuccess: false}
 
-        this.sendLogin = this.sendLogin.bind(this);
+        this.sendLogin = this.sendLogin.bind(this)
+        this.updateSoundcloudUrlOrder = this.updateSoundcloudUrlOrder.bind(this)
+        this.addSoundcloudUrl = this.addSoundcloudUrl.bind(this)
+        this.saveSoundcloudUrls = this.saveSoundcloudUrls.bind(this)
     }
 
     componentDidMount() {
@@ -18,8 +21,6 @@ export class AdminPage extends Component<any, any> {
 
     updateSoundcloudUrls() {
         getSoundcloudUrls().then(soundcloudUrls => {
-            console.log("got soundcloud urls")
-            console.log(soundcloudUrls)
             this.setState({soundcloudUrls: soundcloudUrls.parsedBody});
         });
     }
@@ -38,7 +39,11 @@ export class AdminPage extends Component<any, any> {
     addSoundcloudUrl() {
         const soundcloudUrl = (document.getElementById("addSoundCloudUrlInput") as HTMLInputElement).value;
         addSoundcloudUrl(soundcloudUrl).then(result => {
-            // if result is 401, show unauthorized banner
+            if(result.status === 201 || result.status === 200) {
+                this.setState({unauthorizedReason: null});
+            } else {
+                this.setState({unauthorizedReason: "Not logged in, cannot add soundcloud Url"});
+            }
             this.updateSoundcloudUrls();
         });
     }
@@ -72,20 +77,22 @@ export class AdminPage extends Component<any, any> {
     }
 
     updateSoundcloudUrlOrder(e: React.FormEvent<HTMLInputElement>, url: string) {
-        console.log(`calling updateSoundcloudUrlOrder with value 
-        ${e.currentTarget.value} and url ${url}`)
-        var currentUrls: SoundcloudUrl[] = this.state.soundcloudUrls;
-        console.log(currentUrls)
+        const currentUrls: SoundcloudUrl[] = this.state.soundcloudUrls;
         const newUrls = currentUrls.map((scUrlFromMap: SoundcloudUrl) => {
             if(scUrlFromMap.url === url) {
                 scUrlFromMap.uiOrder = +e.currentTarget.value
             }
             return scUrlFromMap
-            // console.log(`gett this ${scUrlFromMap.url}`)
         })
         this.setState({soundcloudUrls:newUrls})
-        // this.setState()
-        // console.log(uiOrder)
+    }
+
+    // next up get this working
+    saveSoundcloudUrls() {
+        // updateSoundcloudUrls(this.state.soundcloudUrls).then(r => {
+        //     console.log("update service call returned to AdminPage handler then clause")
+        // })
+        console.log(this.state.soundcloudUrls)
     }
 
     renderAudioManagementList(soundcloudUrls: SoundcloudUrl[]) {
@@ -96,10 +103,19 @@ export class AdminPage extends Component<any, any> {
             <>
                 {soundcloudUrls.map((data) => {
                     return (
-                        <div key={data.url}>
+                        <div key={data.url} className="adminSoundcloudUrlEditbox">
                             <p>{data.url}</p>
-                            <button key={data.url} onClick={() => this.deleteSoundcloudUrl(data.url)}>Delete URL</button>
-                            <input type="number" onChange={(event) => this.updateSoundcloudUrlOrder(event, data.url)} value={data.uiOrder}/>
+                            <label htmlFor={`${data.url}-id`}>UiOrder</label>
+                            <input type="number"
+                                   id={`${data.url}-id`}
+                                   className="uiOrderInput"
+                                   onChange={(event) => this.updateSoundcloudUrlOrder(event, data.url)}
+                                   value={data.uiOrder}/>
+                            <br/>
+                            <button key={data.url}
+                                    onClick={() => this.deleteSoundcloudUrl(data.url)}>
+                                Delete URL
+                            </button>
                         </div>
                     )
                 })}
@@ -110,20 +126,24 @@ export class AdminPage extends Component<any, any> {
     render() {
         const {soundcloudUrls, unauthorizedReason, loginSuccess} = this.state;
         return (
-            <div>
+            <div id="adminPage">
                 <div>
                     {this.renderAdminBanner(unauthorizedReason, loginSuccess)}
                 </div>
                 <div>
                     <label htmlFor={"username"}>Username</label>
                     <input id={"username"} type={"text"}/>
+                    <br/>
                     <label htmlFor={"password"}>Password</label>
                     <input id={"password"} type={"text"}/>
+                    <br/>
                     <button onClick={this.sendLogin}>Login</button>
+                    <br/>
+                    <input type={"text"} id={"addSoundCloudUrlInput"}/>
+                    <button onClick={this.addSoundcloudUrl}>Add URL</button>
                 </div>
                 {this.renderAudioManagementList(soundcloudUrls)}
-                <input type={"text"} id={"addSoundCloudUrlInput"}/>
-                <button onClick={() => this.addSoundcloudUrl()}>Add URL</button>
+                <button onClick={this.saveSoundcloudUrls}>Save UiOrder</button>
             </div>
         );
     }

@@ -1,7 +1,7 @@
 import {getBearerToken} from "../persistence/localstorage"
 import {production} from "../config"
 
-export {getSoundcloudUrls, login, deleteSoundcloudUrl, addSoundcloudUrl}
+export {getSoundcloudUrls, login, deleteSoundcloudUrl, addSoundcloudUrl, updateSoundcloudUrls}
 export type {BearerToken, SoundcloudUrl}
 
 const serviceLocation = production ? "http://andrewwillette.com:9099" : "http://localhost:9099"
@@ -91,5 +91,10 @@ async function deleteSoundcloudUrl(url: string) {
 async function addSoundcloudUrl(url: string) {
     const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${addSoundcloudEndpoint}`, {url, bearerToken: getBearerToken()})
     return await data
+}
+
+async function updateSoundcloudUrls(soundcloudUrls: SoundcloudUrl[]) {
+    console.log("calling updateSoundcloudUrls in adrewwilet file with ")
+    console.log(soundcloudUrls)
 }
 
