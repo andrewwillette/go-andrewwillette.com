@@ -23,7 +23,8 @@ interface HttpResponse<T> extends Response {
 }
 
 interface SoundcloudUrl {
-    url: string
+    url: string,
+    uiOrder: number
 }
 
 

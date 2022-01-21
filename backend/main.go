@@ -9,7 +9,7 @@ import (
 const SqlLiteDatabaseFileName = "sqlite-database.db"
 
 func main() {
-	logging.GlobalLogger.Info().Msg("Starting application")
+	logging.GlobalLogger.Info().Msg("Starting application.")
 	persistence.InitDatabaseIdempotent(SqlLiteDatabaseFileName)
 	userService := &persistence.UserService{SqliteDbFile: SqlLiteDatabaseFileName}
 	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: SqlLiteDatabaseFileName}

@@ -119,13 +119,22 @@ func getAllTables(databaseFile string) ([]string, error) {
 	return tables, nil
 }
 
+func alterSoundcloudTableUiOrderAddition(sqlDbFile string) error {
+	if err := runSqlScript(sqlDbFile, "./persistence/sql/alterSoundcloudTableUiOrder.sql"); err != nil {
+		logging.GlobalLogger.Err(err).Msg("Failed to run run script: alterSoundcloudTableUiOrder.sql")
+		return err
+	}
+	return nil
+}
+
 // InitDatabaseIdempotent - Creates database if it doesn't currently exist.
 // Database creation includes creating the user and soundcloud table.
 func InitDatabaseIdempotent(sqliteFile string) {
 	if _, err := os.Stat(sqliteFile); os.IsNotExist(err) {
-		err = createDatabase(sqliteFile)
-		if err != nil {
+		if err = createDatabase(sqliteFile); err != nil {
 			logging.GlobalLogger.Fatal().Msg("failed to create database")
+		}
+		if err != nil {
 		}
 
 		userService := &UserService{SqliteDbFile: sqliteFile}
@@ -134,4 +143,6 @@ func InitDatabaseIdempotent(sqliteFile string) {
 		soundcloudUrlService := &SoundcloudUrlService{SqliteFile: sqliteFile}
 		soundcloudUrlService.createSoundcloudUrlTable()
 	}
+	// Delete this after executing it once in prod, it's idempotent though, so can run a bunch locally who cares
+	_ = alterSoundcloudTableUiOrderAddition(sqliteFile)
 }

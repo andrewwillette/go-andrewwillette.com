@@ -18,6 +18,8 @@ export class AdminPage extends Component<any, any> {
 
     updateSoundcloudUrls() {
         getSoundcloudUrls().then(soundcloudUrls => {
+            console.log("got soundcloud urls")
+            console.log(soundcloudUrls)
             this.setState({soundcloudUrls: soundcloudUrls.parsedBody});
         });
     }
@@ -69,6 +71,23 @@ export class AdminPage extends Component<any, any> {
         }
     }
 
+    updateSoundcloudUrlOrder(e: React.FormEvent<HTMLInputElement>, url: string) {
+        console.log(`calling updateSoundcloudUrlOrder with value 
+        ${e.currentTarget.value} and url ${url}`)
+        var currentUrls: SoundcloudUrl[] = this.state.soundcloudUrls;
+        console.log(currentUrls)
+        const newUrls = currentUrls.map((scUrlFromMap: SoundcloudUrl) => {
+            if(scUrlFromMap.url === url) {
+                scUrlFromMap.uiOrder = +e.currentTarget.value
+            }
+            return scUrlFromMap
+            // console.log(`gett this ${scUrlFromMap.url}`)
+        })
+        this.setState({soundcloudUrls:newUrls})
+        // this.setState()
+        // console.log(uiOrder)
+    }
+
     renderAudioManagementList(soundcloudUrls: SoundcloudUrl[]) {
         if (soundcloudUrls === null) {
             return <></>;
@@ -80,6 +99,7 @@ export class AdminPage extends Component<any, any> {
                         <div key={data.url}>
                             <p>{data.url}</p>
                             <button key={data.url} onClick={() => this.deleteSoundcloudUrl(data.url)}>Delete URL</button>
+                            <input type="number" onChange={(event) => this.updateSoundcloudUrlOrder(event, data.url)} value={data.uiOrder}/>
                         </div>
                     )
                 })}

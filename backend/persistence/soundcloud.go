@@ -27,7 +27,7 @@ func (u *SoundcloudUrlService) UpdateSoundcloudUrlUiOrder(url string, uiOrder in
 	updateUrlStatement := fmt.Sprintf("UPDATE %s SET uiOrder = %d WHERE url = \"%s\"", soundcloudTable, uiOrder, url)
 	preparedStatement, err := db.Prepare(updateUrlStatement)
 	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error preparing sql in UpdateSoundcloudUrlUiOrder")
+		logging.GlobalLogger.Warn().Msg("Error preparing sql in UpdateSoundcloudUrlUiOrder")
 		return err
 	}
 	_, err = preparedStatement.Exec()
