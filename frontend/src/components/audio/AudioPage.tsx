@@ -11,7 +11,7 @@ export class AudioPage extends Component<any, any> {
     componentDidMount() {
         getSoundcloudUrls().then(soundcloudUrls => {
             let soundcloudUrlsArray = soundcloudUrls.parsedBody
-            if (soundcloudUrlsArray != undefined) {
+            if (soundcloudUrlsArray !== undefined) {
                 soundcloudUrlsArray.reverse()
             }
             this.setState({soundcloudUrls: soundcloudUrlsArray})

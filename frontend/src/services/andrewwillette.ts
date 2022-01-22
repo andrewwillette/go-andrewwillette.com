@@ -27,27 +27,31 @@ interface SoundcloudUrl {
     uiOrder: number
 }
 
-
 interface ApiResponse {
     success: boolean
 }
 
-async function http<T>(
-    request: RequestInfo, body: any
-): Promise<HttpResponse<T>> {
+// const requestHeaders: HeadersInit = new Headers();
+// requestHeaders.set('Authorization', getBearerToken());
+
+async function http<T>(request: RequestInfo, body: any, method: string, authorizationHeader: string): Promise<HttpResponse<T>> {
+    // console.log(JSON.stringify(body))
     if (body != null) {
-        console.log("body is not null")
-        const response: HttpResponse<T> = await fetch(request, {
-            method: 'POST', // *GET, POST, PUT, DELETE, etc.
-            headers: {
-                'Content-Type': 'text/plain',
-                'Connection': 'keep-alive',
-                'Accept': '*/*',
-                'Accept-Encoding': 'gzip, deflate, br'
-            },
-            body: JSON.stringify(body) // body data type must match "Content-Type" header
-        }).catch(reason => {
-            console.log(`post fetch reason is ${reason}`)
+        const opts:RequestInit = {
+                method: 'POST',
+                // mode: "no-cors",
+                // credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Connection': 'keep-alive',
+                    'Accept': '*/*',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Authorization': authorizationHeader
+                },
+                body: JSON.stringify(body) // body data type must match "Content-Type" header
+            }
+        const response: HttpResponse<T> = await fetch(request, opts).catch(reason => {
+            console.log(`http fetch call failed with reason: ${reason}`)
             return Promise.reject()
         })
         if(response.status === 201 || response.status === 200) {
@@ -66,7 +70,7 @@ async function http<T>(
 
 async function getSoundcloudUrls(): Promise<HttpResponse<SoundcloudUrl[]>> {
     const data : Promise<HttpResponse<SoundcloudUrl[]>> = http<SoundcloudUrl[]>(
-        `${serviceLocation}${getSoundcloudAllEndpoint}`, null
+        `${serviceLocation}${getSoundcloudAllEndpoint}`, null, "GET", ""
     )
     return await data
 }
@@ -79,17 +83,24 @@ async function getSoundcloudUrls(): Promise<HttpResponse<SoundcloudUrl[]>> {
  * @returns Promise<HttpResponse<BearerToken>> 
  */
 async function login(username: string, password: string) {
-    const data : Promise<HttpResponse<BearerToken>> = http<BearerToken>(`${serviceLocation}${loginEndpoint}`, {username, password})
+    const data : Promise<HttpResponse<BearerToken>> = http<BearerToken>(`${serviceLocation}${loginEndpoint}`,
+        {username, password}, "POST", "")
     return await data
 }
 
+/**
+ * Sends DELETE request for a persisted soundcloudUrl
+ * @param url
+ */
 async function deleteSoundcloudUrl(url: string) {
-    const data: Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${deleteSoundcloudEndpoint}`, {url, bearerToken: getBearerToken()})
+    const data: Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${deleteSoundcloudEndpoint}`,
+        {url}, "DELETE", getBearerToken())
     return await data
 }
 
 async function addSoundcloudUrl(url: string) {
-    const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${addSoundcloudEndpoint}`, {url, bearerToken: getBearerToken()})
+    const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${addSoundcloudEndpoint}`,
+        {url}, "PUT", getBearerToken())
     return await data
 }
 

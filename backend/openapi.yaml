@@ -41,6 +41,23 @@ paths:
           description: The url was successfully added
         401:
           description: Unauthorized
+  /update-soundcloud-url:
+    patch:
+      summary: Update soundcloud url
+      operationId: updateSoundcloudUrl
+      description: Updates a souncloud url
+      tags:
+        - Soundcloud Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SoundcloudUrl"
+      responses:
+        200:
+          description: The url was successfully updated
+        401:
+          description: Unauthorized
   /delete-soundcloud-url:
     delete:
       summary: Delete soundcloud url
@@ -85,6 +102,9 @@ components:
         url:
           type: string
           description: the soundcloud url
+        uiOrder:
+          type: integer
+          description: the order of the soundcloud display
     AuthenticatedSoundcloudUrl:
       type: object
       required:

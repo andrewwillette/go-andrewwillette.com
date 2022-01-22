@@ -44,9 +44,9 @@ func (u *WilletteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, _ *http.
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	var soundcloudUrls []SoundcloudUrlJson
+	var soundcloudUrls []SoundcloudUrlUiOrderJson
 	for _, url := range urls {
-		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlJson{Url: url.Url, UiOrder: url.UiOrder})
+		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlUiOrderJson{Url: url.Url, UiOrder: url.UiOrder})
 	}
 	if err = json.NewEncoder(w).Encode(soundcloudUrls); err != nil {
 		logging.GlobalLogger.Err(err).Msg("Failed to encode soundcloud urls in http response.")
@@ -58,17 +58,23 @@ func (u *WilletteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, _ *http.
 
 func (u *WilletteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Request) {
 	logging.GlobalLogger.Info().Msg("addSoundcloudUrl called.")
-	w.Header().Set("Content-Type", "application-json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	if r.Method == "OPTIONS" {
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData AuthenticatedSoundcloudUrlJson
+	var soundcloudData SoundcloudUrlJson
 	err := decoder.Decode(&soundcloudData)
+	logging.GlobalLogger.Info().Msg(fmt.Sprintf("%+v", soundcloudData))
 	if err != nil {
 		logging.GlobalLogger.Info().Msg("Failed to decode soundcloud data.")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if u.userService.BearerTokenExists(soundcloudData.BearerToken) {
+	if u.userService.BearerTokenExists(r.Header.Get("Authorization")) {
 		logging.GlobalLogger.Info().Msg("Bearertoken is valid.")
 		err := u.soundcloudUrlService.AddSoundcloudUrl(soundcloudData.Url)
 		if err != nil {
@@ -89,15 +95,17 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 	logging.GlobalLogger.Info().Msg("deleteSoundcloudUrlPost called.")
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with, Authorization")
 	decoder := json.NewDecoder(r.Body)
-	var soundcloudData AuthenticatedSoundcloudUrlJson
+	var soundcloudData SoundcloudUrlJson
 	err := decoder.Decode(&soundcloudData)
 	if err != nil {
 		logging.GlobalLogger.Info().Msg("Failed to decode soundcloud data in delete.")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if u.userService.BearerTokenExists(soundcloudData.BearerToken) {
+	if u.userService.BearerTokenExists(r.Header.Get("Authorization")) {
 		err = u.soundcloudUrlService.DeleteSoundcloudUrl(soundcloudData.Url)
 		if err != nil {
 			logging.GlobalLogger.Err(err).Msg("Error deleting soundcloudUrl in service layer.")
@@ -108,7 +116,7 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 		return
 	} else {
 		logging.GlobalLogger.Info().
-			Msg(fmt.Sprintf("deleteSoundcloudUrl called unauthorized for item: %s, bearerToken: %s", soundcloudData.Url, soundcloudData.BearerToken))
+			Msg(fmt.Sprintf("deleteSoundcloudUrl called unauthorized for item: %s, bearerToken: %s", soundcloudData.Url, r.Header.Get("Authorization")))
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

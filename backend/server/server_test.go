@@ -151,7 +151,7 @@ func TestAddSoundcloudUrl(t *testing.T) {
 		server := NewWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
 		newSoundcloudUrl := "testsoundcloudurl.com"
-		body := AuthenticatedSoundcloudUrlJson{Url: newSoundcloudUrl, BearerToken: testBearerToken}
+		body := SoundcloudUrlJson{Url: newSoundcloudUrl, BearerToken: testBearerToken}
 		request := httptest.NewRequest(http.MethodPost, loginEndpoint, authenticatedSoundcloudUrlToJSON(body))
 		server.addSoundcloudUrl(response, request)
 		responseTwo := httptest.NewRecorder()
@@ -172,7 +172,7 @@ func TestAddSoundcloudUrl(t *testing.T) {
 	})
 }
 
-func authenticatedSoundcloudUrlToJSON(url AuthenticatedSoundcloudUrlJson) io.Reader {
+func authenticatedSoundcloudUrlToJSON(url SoundcloudUrlJson) io.Reader {
 	marshalledUser, _ := json.Marshal(url)
 	return bytes.NewReader(marshalledUser)
 }
