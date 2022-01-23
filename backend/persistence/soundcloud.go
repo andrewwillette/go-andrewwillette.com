@@ -18,22 +18,24 @@ type SoundcloudUrl struct {
 	UiOrder int
 }
 
-func (u *SoundcloudUrlService) UpdateSoundcloudUrlUiOrder(url string, uiOrder int) error {
+func (u *SoundcloudUrlService) UpdateSoundcloudUiOrders(urls []SoundcloudUrl) error {
 	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error opening database in UpdateSoundcloudUrlUiOrder")
+		logging.GlobalLogger.Err(err).Msg("Error opening database in UpdateSoundcloudUrls_uiOrder")
 		return err
 	}
-	updateUrlStatement := fmt.Sprintf("UPDATE %s SET uiOrder = %d WHERE url = \"%s\"", soundcloudTable, uiOrder, url)
-	preparedStatement, err := db.Prepare(updateUrlStatement)
-	if err != nil {
-		logging.GlobalLogger.Warn().Msg("Error preparing sql in UpdateSoundcloudUrlUiOrder")
-		return err
-	}
-	_, err = preparedStatement.Exec()
-	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Error executing sql in UpdateSoundcloudUrlUiOrder")
-		return err
+	for _, url := range urls {
+		updateUrlStatement := fmt.Sprintf("UPDATE %s SET uiOrder = %d WHERE url = \"%s\"", soundcloudTable, url.UiOrder, url.Url)
+		preparedStatement, err := db.Prepare(updateUrlStatement)
+		if err != nil {
+			logging.GlobalLogger.Warn().Msg("Error preparing sql in UpdateSoundcloudUiOrders")
+			return err
+		}
+		_, err = preparedStatement.Exec()
+		if err != nil {
+			logging.GlobalLogger.Err(err).Msg("Error executing sql in UpdateSoundcloudUiOrders")
+			return err
+		}
 	}
 	return nil
 }

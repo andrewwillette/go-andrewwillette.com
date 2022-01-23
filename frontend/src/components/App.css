@@ -75,7 +75,8 @@ a:hover {
 }
 
 .adminSoundcloudUrlEditbox {
-    border:solid chocolate;
+    margin:.5rem;
+    border:solid lightgray;
 }
 
 #adminPage button {

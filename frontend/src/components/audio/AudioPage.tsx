@@ -8,11 +8,20 @@ export class AudioPage extends Component<any, any> {
         super(props);
         this.state = {soundcloudUrls: []}
     }
+
     componentDidMount() {
         getSoundcloudUrls().then(soundcloudUrls => {
             let soundcloudUrlsArray = soundcloudUrls.parsedBody
             if (soundcloudUrlsArray !== undefined) {
-                soundcloudUrlsArray.reverse()
+                soundcloudUrlsArray.sort(
+                    (v1, v2) => {
+                        if(v1.uiOrder > v2.uiOrder){
+                            return 1;
+                        } else if (v1.uiOrder < v2.uiOrder) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }})
             }
             this.setState({soundcloudUrls: soundcloudUrlsArray})
         });
@@ -30,6 +39,7 @@ export class AudioPage extends Component<any, any> {
             </>
         )
     }
+
     render() {
         const {soundcloudUrls} = this.state;
         return (

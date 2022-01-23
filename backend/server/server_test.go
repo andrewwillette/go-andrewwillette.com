@@ -23,7 +23,7 @@ func (m *MockUserService) Login(username, password string) (success bool, bearer
 	return m.LoginFunc(username, password)
 }
 
-func (m *MockUserService) BearerTokenExists(bearerToken string) bool {
+func (m *MockUserService) WilletteTokenExists(bearerToken string) bool {
 	return m.BearerTokenExistsFunc(bearerToken)
 }
 

@@ -8,6 +8,7 @@ const serviceLocation = production ? "http://andrewwillette.com:9099" : "http://
 
 const getSoundcloudAllEndpoint = "/get-soundcloud-urls"
 const addSoundcloudEndpoint = "/add-soundcloud-url"
+const batchUpdateSoundcloudEndpoint = "/update-soundcloud-urls"
 const deleteSoundcloudEndpoint = "/delete-soundcloud-url"
 const loginEndpoint = "/login"
 
@@ -31,16 +32,10 @@ interface ApiResponse {
     success: boolean
 }
 
-// const requestHeaders: HeadersInit = new Headers();
-// requestHeaders.set('Authorization', getBearerToken());
-
 async function http<T>(request: RequestInfo, body: any, method: string, authorizationHeader: string): Promise<HttpResponse<T>> {
-    // console.log(JSON.stringify(body))
     if (body != null) {
         const opts:RequestInit = {
-                method: 'POST',
-                // mode: "no-cors",
-                // credentials: 'include',
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Connection': 'keep-alive',
@@ -48,7 +43,7 @@ async function http<T>(request: RequestInfo, body: any, method: string, authoriz
                     'Accept-Encoding': 'gzip, deflate, br',
                     'Authorization': authorizationHeader
                 },
-                body: JSON.stringify(body) // body data type must match "Content-Type" header
+                body: JSON.stringify(body)
             }
         const response: HttpResponse<T> = await fetch(request, opts).catch(reason => {
             console.log(`http fetch call failed with reason: ${reason}`)
@@ -62,7 +57,10 @@ async function http<T>(request: RequestInfo, body: any, method: string, authoriz
         }
         return response
     } else {
-        const response: HttpResponse<T> = await fetch(request)
+        const response: HttpResponse<T> = await fetch(request).catch(reason => {
+            console.log(`http fetch call failed with reason: ${reason}`)
+            return Promise.reject()
+        })
         response.parsedBody = await response.json()
         return response
     }
@@ -105,7 +103,10 @@ async function addSoundcloudUrl(url: string) {
 }
 
 async function updateSoundcloudUrls(soundcloudUrls: SoundcloudUrl[]) {
-    console.log("calling updateSoundcloudUrls in adrewwilet file with ")
+    console.log("calling updateSoundcloudUrls in andrewwillette service")
     console.log(soundcloudUrls)
+    const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${batchUpdateSoundcloudEndpoint}`,
+        soundcloudUrls, "PUT", getBearerToken())
+    return await data
 }
 

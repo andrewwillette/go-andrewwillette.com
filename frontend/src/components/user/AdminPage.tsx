@@ -89,9 +89,9 @@ export class AdminPage extends Component<any, any> {
 
     // next up get this working
     saveSoundcloudUrls() {
-        // updateSoundcloudUrls(this.state.soundcloudUrls).then(r => {
-        //     console.log("update service call returned to AdminPage handler then clause")
-        // })
+        updateSoundcloudUrls(this.state.soundcloudUrls).then(r => {
+            console.log("update service call returned to AdminPage handler then clause")
+        })
         console.log(this.state.soundcloudUrls)
     }
 

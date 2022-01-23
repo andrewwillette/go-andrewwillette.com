@@ -42,10 +42,10 @@ paths:
         401:
           description: Unauthorized
   /update-soundcloud-url:
-    patch:
-      summary: Update soundcloud url
+    put:
+      summary: Batch update soundcloud urls
       operationId: updateSoundcloudUrl
-      description: Updates a souncloud url
+      description: Updates an array of souncloud url objects
       tags:
         - Soundcloud Management
       requestBody:
@@ -55,7 +55,7 @@ paths:
               $ref: "#/components/schemas/SoundcloudUrl"
       responses:
         200:
-          description: The url was successfully updated
+          description: The urls were successfully updated
         401:
           description: Unauthorized
   /delete-soundcloud-url:

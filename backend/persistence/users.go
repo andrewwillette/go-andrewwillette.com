@@ -185,7 +185,7 @@ func (u *UserService) Login(username, password string) (success bool, bearerToke
 	}
 }
 
-func (u *UserService) BearerTokenExists(bearerToken string) bool {
+func (u *UserService) WilletteTokenExists(bearerToken string) bool {
 	db, err := sql.Open("sqlite3", u.SqliteDbFile)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error opening database")
