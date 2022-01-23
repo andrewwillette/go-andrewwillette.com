@@ -61,16 +61,21 @@ func (u *WilletteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, _ *http.
 /**
 Headers to add to all responses. Hacky, one-size-fits-all, but CORs is a pain and I don't have the style yet.
 */
-func addDefaultRequestHeaders(w http.ResponseWriter) {
+func addDefaultRequestHeaders(w http.ResponseWriter, r *http.Request) {
+	originWhiteList := []string{"http://localhost:3000", "http://andrewwillette.com"}
+	for _, originUrl := range originWhiteList {
+		if r.Header.Get("origin") == originUrl {
+			w.Header().Set("Access-Control-Allow-Origin", originUrl)
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 func (u *WilletteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Request) {
 	logging.GlobalLogger.Info().Msg("addSoundcloudUrl called.")
-	addDefaultRequestHeaders(w)
+	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -107,7 +112,7 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with, Authorization")
 	if r.Method == "OPTIONS" {
-		addDefaultRequestHeaders(w)
+		addDefaultRequestHeaders(w, r)
 		return
 	}
 	decoder := json.NewDecoder(r.Body)
@@ -140,7 +145,7 @@ Update soundcloud url uiOrder values.
 */
 func (u *WilletteAPIServer) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r *http.Request) {
 	logging.GlobalLogger.Info().Msg("updateSoundcloudUrlUiOrders called.")
-	addDefaultRequestHeaders(w)
+	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -169,7 +174,7 @@ func (u *WilletteAPIServer) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r
 
 func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 	logging.GlobalLogger.Info().Msg("Login called.")
-	addDefaultRequestHeaders(w)
+	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
 	}
