@@ -30,8 +30,8 @@ func (suite *SoundcloudTestSuite) TestSoundcloudUrlService() {
 		suite.T().Fail()
 	}
 	assert.Contains(suite.T(), tables, soundcloudTable)
-	soundcloudUrlOne := "soundcloud.com/example"
-	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlOne)
+	soundcloudUrlOne := SoundcloudUrl{Url: "soundcloud.com/example", UiOrder: 0}
+	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlOne.Url)
 	if err != nil {
 		suite.T().Fail()
 	}
@@ -39,9 +39,9 @@ func (suite *SoundcloudTestSuite) TestSoundcloudUrlService() {
 	if err != nil {
 		suite.T().Fail()
 	}
-	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlOne, 0))
-	soundcloudUrlTwo := "soundcloud.com/numbertwo"
-	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlTwo)
+	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlOne))
+	soundcloudUrlTwo := SoundcloudUrl{Url: "soundcloud.com/numbertwo"}
+	err = soundcloudUrlService.AddSoundcloudUrl(soundcloudUrlTwo.Url)
 	if err != nil {
 		suite.T().Fail()
 		return
@@ -50,12 +50,10 @@ func (suite *SoundcloudTestSuite) TestSoundcloudUrlService() {
 	if err != nil {
 		suite.T().Fail()
 	}
-	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlTwo, 0))
-	newUiOrderOne := SoundcloudUrl{Url: soundcloudUrlOne, UiOrder: 23}
-	newUiOrderTwo := SoundcloudUrl{Url: soundcloudUrlTwo, UiOrder: 5}
-	//newUiOrderTwo := 5
+	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlTwo))
+	newUiOrderOne := SoundcloudUrl{Url: soundcloudUrlOne.Url, UiOrder: 23}
+	newUiOrderTwo := SoundcloudUrl{Url: soundcloudUrlTwo.Url, UiOrder: 5}
 	err = soundcloudUrlService.UpdateSoundcloudUiOrders([]SoundcloudUrl{newUiOrderTwo, newUiOrderOne})
-	//err = soundcloudUrlService.UpdateSoundcloudUrls_uiOrder(soundcloudUrlTwo, newUiOrderTwo)
 	if err != nil {
 		suite.T().Fail()
 	}
@@ -65,13 +63,11 @@ func (suite *SoundcloudTestSuite) TestSoundcloudUrlService() {
 	}
 	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, newUiOrderOne))
 	assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, newUiOrderTwo))
-	assert.ElementsMatch(suite.T(), soundcloudUrls, []SoundcloudUrl{newUiOrderOne, newUiOrderTwo})
-	//assert.True(suite.T(), soundcloudUrlExists(soundcloudUrls, soundcloudUrlTwo, newUiOrderTwo))
 }
 
 func soundcloudUrlExists(soundcloudUrls []SoundcloudUrl, url SoundcloudUrl) bool {
 	for _, value := range soundcloudUrls {
-		if value.Url == url && value.UiOrder == uiOrder {
+		if value.Url == url.Url && value.UiOrder == url.UiOrder {
 			return true
 		}
 	}

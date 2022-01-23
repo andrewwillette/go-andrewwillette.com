@@ -28,10 +28,11 @@ func (m *MockUserService) WilletteTokenExists(bearerToken string) bool {
 }
 
 type MockSoundcloudUrlService struct {
-	GetAllSoundcloudUrlsFunc func() ([]persistence.SoundcloudUrl, error)
-	AddSoundcloudUrlsFunc    func(s string) error
-	DeleteSoundcloudUrlFunc  func(s string) error
-	SoundcloudUrls           []persistence.SoundcloudUrl
+	GetAllSoundcloudUrlsFunc     func() ([]persistence.SoundcloudUrl, error)
+	AddSoundcloudUrlsFunc        func(s string) error
+	DeleteSoundcloudUrlFunc      func(s string) error
+	UpdateSoundcloudUiOrdersFunc func([]persistence.SoundcloudUrl) error
+	SoundcloudUrls               []persistence.SoundcloudUrl
 }
 
 func (m *MockSoundcloudUrlService) GetAllSoundcloudUrls() ([]persistence.SoundcloudUrl, error) {
@@ -44,6 +45,10 @@ func (m *MockSoundcloudUrlService) AddSoundcloudUrl(s string) error {
 
 func (m MockSoundcloudUrlService) DeleteSoundcloudUrl(s string) error {
 	return m.DeleteSoundcloudUrlFunc(s)
+}
+
+func (m MockSoundcloudUrlService) UpdateSoundcloudUiOrders(urls []persistence.SoundcloudUrl) error {
+	return m.UpdateSoundcloudUiOrdersFunc(urls)
 }
 
 func TestLogin(t *testing.T) {
@@ -151,7 +156,7 @@ func TestAddSoundcloudUrl(t *testing.T) {
 		server := NewWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
 		newSoundcloudUrl := "testsoundcloudurl.com"
-		body := SoundcloudUrlJson{Url: newSoundcloudUrl, BearerToken: testBearerToken}
+		body := SoundcloudUrlJson{Url: newSoundcloudUrl}
 		request := httptest.NewRequest(http.MethodPost, loginEndpoint, authenticatedSoundcloudUrlToJSON(body))
 		server.addSoundcloudUrl(response, request)
 		responseTwo := httptest.NewRecorder()
