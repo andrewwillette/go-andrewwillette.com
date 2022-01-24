@@ -69,7 +69,7 @@ func TestLogin(t *testing.T) {
 		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
 		}
-		server := NewWilletteAPIServer(userService, soundcloudUrlService)
+		server := newWilletteAPIServer(userService, soundcloudUrlService)
 		request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
 		server.login(response, request)
 		assert.Equal(t, 401, response.Code)
@@ -91,7 +91,7 @@ func TestLogin(t *testing.T) {
 		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
 		}
-		server := NewWilletteAPIServer(userService, soundcloudUrlService)
+		server := newWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
 		body := UserJson{Username: "hello", Password: "passwordWorld"}
 		request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
@@ -116,7 +116,7 @@ func TestLogin(t *testing.T) {
 		soundcloudUrlService := &MockSoundcloudUrlService{
 			SoundcloudUrls: soundcloudUrls,
 		}
-		server := NewWilletteAPIServer(userService, soundcloudUrlService)
+		server := newWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
 		body := UserJson{Username: "hello", Password: "passwordWorld"}
 		request := httptest.NewRequest(http.MethodGet, loginEndpoint, userToJSON(body))
@@ -153,7 +153,7 @@ func TestAddSoundcloudUrl(t *testing.T) {
 				return nil
 			},
 		}
-		server := NewWilletteAPIServer(userService, soundcloudUrlService)
+		server := newWilletteAPIServer(userService, soundcloudUrlService)
 		response := httptest.NewRecorder()
 		newSoundcloudUrl := "testsoundcloudurl.com"
 		body := SoundcloudUrlJson{Url: newSoundcloudUrl}
