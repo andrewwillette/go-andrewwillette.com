@@ -142,7 +142,6 @@ func InitDatabaseIdempotent(sqliteFile string) {
 
 		soundcloudUrlService := &SoundcloudUrlService{SqliteFile: sqliteFile}
 		soundcloudUrlService.createSoundcloudUrlTable()
+		_ = alterSoundcloudTableUiOrderAddition(sqliteFile)
 	}
-	// Delete this after executing it once in prod, it's idempotent though, so can run a bunch locally who cares
-	_ = alterSoundcloudTableUiOrderAddition(sqliteFile)
 }
