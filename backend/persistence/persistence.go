@@ -34,7 +34,6 @@ func runSqlScript(databaseFile, sqlScriptFilePath string) error {
 	return nil
 }
 
-// Creates SqliteFile database with filename
 func createDatabase(databaseFile string) error {
 	file, err := os.Create(databaseFile)
 	if err != nil {
@@ -53,7 +52,6 @@ func createDatabase(databaseFile string) error {
 	return nil
 }
 
-//Big money, we out here
 func getQueryResponseAsMap(sqlQuery *sql.Stmt) ([]map[string]interface{}, error) {
 	rows, err := sqlQuery.Query()
 	if err != nil {
@@ -134,12 +132,8 @@ func InitDatabaseIdempotent(sqliteFile string) {
 		if err = createDatabase(sqliteFile); err != nil {
 			logging.GlobalLogger.Fatal().Msg("failed to create database")
 		}
-		if err != nil {
-		}
-
 		userService := &UserService{SqliteDbFile: sqliteFile}
 		userService.createUserTable()
-
 		soundcloudUrlService := &SoundcloudUrlService{SqliteFile: sqliteFile}
 		soundcloudUrlService.createSoundcloudUrlTable()
 		_ = alterSoundcloudTableUiOrderAddition(sqliteFile)

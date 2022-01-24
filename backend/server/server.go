@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/andrewwillette/willette_api/config"
 	"github.com/andrewwillette/willette_api/logging"
 	"github.com/andrewwillette/willette_api/persistence"
 	"net/http"
@@ -37,7 +38,6 @@ func NewWilletteAPIServer(userService UserService, soundcloudUrlService Soundclo
 }
 
 func (u *WilletteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, _ *http.Request) {
-	logging.GlobalLogger.Info().Msg("getAllSoundcloudUrls called.")
 	w.Header().Set("Content-Type", "application-json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	urls, err := u.soundcloudUrlService.GetAllSoundcloudUrls()
@@ -106,13 +106,8 @@ func (u *WilletteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Requ
 }
 
 func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
-	logging.GlobalLogger.Info().Msg("deleteSoundcloudUrlPost called.")
-	w.Header().Set("Content-Type", "application-json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with, Authorization")
+	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
-		addDefaultRequestHeaders(w, r)
 		return
 	}
 	decoder := json.NewDecoder(r.Body)
@@ -144,7 +139,6 @@ func (u *WilletteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 Update soundcloud url uiOrder values.
 */
 func (u *WilletteAPIServer) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r *http.Request) {
-	logging.GlobalLogger.Info().Msg("updateSoundcloudUrlUiOrders called.")
 	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
@@ -155,8 +149,6 @@ func (u *WilletteAPIServer) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r
 		return
 	}
 	var urls []SoundcloudUrlUiOrderJson
-	//b, _ := io.ReadAll(r.Body)
-	//println(b)
 	if err := json.NewDecoder(r.Body).Decode(&urls); err != nil {
 		logging.GlobalLogger.Info().Msg("Error decoding soundcloud urls in update soundcloud urls.")
 		http.Error(w, "Error decoding soundcloud urls.", http.StatusBadRequest)
@@ -173,7 +165,6 @@ func (u *WilletteAPIServer) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r
 }
 
 func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
-	logging.GlobalLogger.Info().Msg("Login called.")
 	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
@@ -209,14 +200,35 @@ func (u *WilletteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *WilletteAPIServer) RunServer() {
-	http.Handle(getSoundcloudAllEndpoint, http.HandlerFunc(u.getAllSoundcloudUrls))
-	http.Handle(addSoundcloudEndpoint, http.HandlerFunc(u.addSoundcloudUrl))
-	http.Handle(deleteSoundcloudEndpoint, http.HandlerFunc(u.deleteSoundcloudUrlPost))
-	http.Handle(loginEndpoint, http.HandlerFunc(u.login))
-	http.Handle(updateSoundcloudUrlsEndpoint, http.HandlerFunc(u.updateSoundcloudUrlUiOrders))
+type router struct {
+	server WilletteAPIServer
+}
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logging.GlobalLogger.Info().Msg("Router getting hit")
+	switch req.URL.Path {
+	case getSoundcloudAllEndpoint:
+		r.server.getAllSoundcloudUrls(w, req)
+	case addSoundcloudEndpoint:
+		r.server.addSoundcloudUrl(w, req)
+	case deleteSoundcloudEndpoint:
+		r.server.deleteSoundcloudUrlPost(w, req)
+	case loginEndpoint:
+		r.server.login(w, req)
+	case updateSoundcloudUrlsEndpoint:
+		r.server.updateSoundcloudUrlUiOrders(w, req)
+	default:
+		http.Error(w, "404 not found", http.StatusNotFound)
+	}
+}
+
+func RunServer() {
+	persistence.InitDatabaseIdempotent(config.SqliteFile)
+	userService := &persistence.UserService{SqliteDbFile: config.SqliteFile}
+	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: config.SqliteFile}
+	websiteServer := NewWilletteAPIServer(userService, soundcloudUrlService)
+	router := router{server: *websiteServer}
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), &router); err != nil {
 		logging.GlobalLogger.Err(err).Msg(fmt.Sprintf("Failed to run WilletteAPIServer on port: %d", port))
 		logging.GlobalLogger.Fatal().Msg("Server failed to start. Exiting application.")
 		return
