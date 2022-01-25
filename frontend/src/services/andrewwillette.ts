@@ -1,8 +1,9 @@
 import {getBearerToken} from "../persistence/localstorage"
 import {production} from "../config"
+import {logger} from "../logging";
 
 export {getSoundcloudUrls, login, deleteSoundcloudUrl, addSoundcloudUrl, updateSoundcloudUrls}
-export type {BearerToken, SoundcloudUrl}
+export type {BearerToken, SoundcloudUrl, HttpResponse}
 
 const serviceLocation = production ? "http://andrewwillette.com:9099" : "http://localhost:9099"
 
@@ -81,6 +82,7 @@ async function getSoundcloudUrls(): Promise<HttpResponse<SoundcloudUrl[]>> {
  * @returns Promise<HttpResponse<BearerToken>> 
  */
 async function login(username: string, password: string) {
+    logger.info(`Calling login with with username: ${username} , password: ${password}`)
     const data : Promise<HttpResponse<BearerToken>> = http<BearerToken>(`${serviceLocation}${loginEndpoint}`,
         {username, password}, "POST", "")
     return await data
@@ -91,20 +93,21 @@ async function login(username: string, password: string) {
  * @param url
  */
 async function deleteSoundcloudUrl(url: string) {
+    logger.info(`Calling deleteSoundcloudUrl with url: ${url}`)
     const data: Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${deleteSoundcloudEndpoint}`,
         {url}, "DELETE", getBearerToken())
     return await data
 }
 
 async function addSoundcloudUrl(url: string) {
+    logger.info(`Calling addSoundcloudUrl with url: ${url}`)
     const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${addSoundcloudEndpoint}`,
         {url}, "PUT", getBearerToken())
     return await data
 }
 
 async function updateSoundcloudUrls(soundcloudUrls: SoundcloudUrl[]) {
-    console.log("calling updateSoundcloudUrls in andrewwillette service")
-    console.log(soundcloudUrls)
+    logger.info(`Calling updateSoundcloudUrls with soundcloudUrls: ${soundcloudUrls}`)
     const data : Promise<HttpResponse<ApiResponse>> = http<ApiResponse>(`${serviceLocation}${batchUpdateSoundcloudEndpoint}`,
         soundcloudUrls, "PUT", getBearerToken())
     return await data
