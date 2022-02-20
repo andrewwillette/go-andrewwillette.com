@@ -136,6 +136,6 @@ func InitDatabaseIdempotent(sqliteFile string) {
 		userService.createUserTable()
 		soundcloudUrlService := &SoundcloudUrlService{SqliteFile: sqliteFile}
 		soundcloudUrlService.createSoundcloudUrlTable()
-		_ = alterSoundcloudTableUiOrderAddition(sqliteFile)
+		//_ = alterSoundcloudTableUiOrderAddition(sqliteFile)
 	}
 }
