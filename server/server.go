@@ -19,7 +19,7 @@ const (
 
 type userService interface {
 	Login(username, password string) (success bool, willetteToken string)
-	WilletteTokenExists(willetteToken string) bool
+	IsAuthorized(willetteToken string) bool
 }
 
 type soundcloudUrlService interface {
@@ -92,7 +92,7 @@ func (u *willetteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if u.userService.WilletteTokenExists(r.Header.Get("Authorization")) {
+	if u.userService.IsAuthorized(r.Header.Get("Authorization")) {
 		logging.GlobalLogger.Info().Msg("WilletteToken is valid.")
 		err := u.soundcloudUrlService.AddSoundcloudUrl(soundcloudData.Url)
 		if err != nil {
@@ -122,7 +122,7 @@ func (u *willetteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if u.userService.WilletteTokenExists(r.Header.Get("Authorization")) {
+	if u.userService.IsAuthorized(r.Header.Get("Authorization")) {
 		err = u.soundcloudUrlService.DeleteSoundcloudUrl(soundcloudData.Url)
 		if err != nil {
 			logging.GlobalLogger.Err(err).Msg("Error deleting soundcloudUrl in service layer.")

@@ -1,20 +1,19 @@
 package logging
 
 import (
-	"io"
-	"os"
-	"path"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
+	"os"
+	"path"
 )
 
 var logConfig = LogConfig{
 	ConsoleLoggingEnabled: true,
 	EncodeLogsAsJson:      true,
 	FileLoggingEnabled:    true,
-	Directory:             "/Users/aw052728/git/go-andrewwillette.com/backend/logging",
+	Directory:             "./logging",
 	Filename:              "server.log",
 	MaxSizeMB:             200,
 	MaxBackups:            2,
@@ -26,7 +25,7 @@ var testlogConfig = LogConfig{
 	ConsoleLoggingEnabled: true,
 	EncodeLogsAsJson:      true,
 	FileLoggingEnabled:    true,
-	Directory:             "/Users/aw052728/git/go-andrewwillette.com/backend/logging",
+	Directory:             "./logging",
 	Filename:              "test.log",
 	MaxSizeMB:             200,
 	MaxBackups:            2,

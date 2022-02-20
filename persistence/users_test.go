@@ -75,6 +75,6 @@ func (suite *UsersTestSuite) TestUpdateUserBearerToken_Valid() {
 	}
 	assert.True(suite.T(), userExists)
 
-	bearerTokenExists := userService.WilletteTokenExists(bearerToken)
+	bearerTokenExists := userService.IsAuthorized(bearerToken)
 	assert.True(suite.T(), bearerTokenExists)
 }

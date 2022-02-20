@@ -5,26 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/andrewwillette/willette_api/persistence"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 type MockUserService struct {
 	UsersRegistered       []UserJson
 	LoginFunc             func(username string, password string) (success bool, bearerToken string)
-	BearerTokenExistsFunc func(bearerToken string) bool
+	IsAuthorizedFunc func(bearerToken string) bool
 }
 
 func (m *MockUserService) Login(username, password string) (success bool, bearerToken string) {
 	return m.LoginFunc(username, password)
 }
 
-func (m *MockUserService) WilletteTokenExists(bearerToken string) bool {
-	return m.BearerTokenExistsFunc(bearerToken)
+func (m *MockUserService) IsAuthorized(bearerToken string) bool {
+	return m.IsAuthorizedFunc(bearerToken)
 }
 
 type MockSoundcloudUrlService struct {
@@ -61,7 +60,7 @@ func TestLogin(t *testing.T) {
 			LoginFunc: func(username, password string) (success bool, bearerToken string) {
 				return false, ""
 			},
-			BearerTokenExistsFunc: func(bearerToken string) bool {
+			IsAuthorizedFunc: func(bearerToken string) bool {
 				return true
 			},
 		}
@@ -83,7 +82,7 @@ func TestLogin(t *testing.T) {
 			LoginFunc: func(username, password string) (success bool, bearerToken string) {
 				return true, testBearerToken
 			},
-			BearerTokenExistsFunc: func(bearerToken string) bool {
+			IsAuthorizedFunc: func(bearerToken string) bool {
 				return true
 			},
 		}
@@ -108,7 +107,7 @@ func TestLogin(t *testing.T) {
 			LoginFunc: func(username, password string) (success bool, bearerToken string) {
 				return true, testBearerToken
 			},
-			BearerTokenExistsFunc: func(bearerToken string) bool {
+			IsAuthorizedFunc: func(bearerToken string) bool {
 				return true
 			},
 		}
@@ -133,7 +132,7 @@ func TestAddSoundcloudUrl(t *testing.T) {
 			LoginFunc: func(username, password string) (success bool, bearerToken string) {
 				return true, testBearerToken
 			},
-			BearerTokenExistsFunc: func(bearerToken string) bool {
+			IsAuthorizedFunc: func(bearerToken string) bool {
 				return true
 			},
 		}
