@@ -43,9 +43,10 @@ func newWilletteAPIServer(userService userService, soundcloudUrlService soundclo
 }
 
 func RunServer() {
-	persistence.InitDatabaseIdempotent(config.SqliteFile)
-	userService := &persistence.UserService{SqliteDbFile: config.SqliteFile}
-	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: config.SqliteFile}
+	databaseFile := config.GetDatabaseFile()
+	persistence.InitDatabaseIdempotent(databaseFile)
+	userService := &persistence.UserService{SqliteDbFile: databaseFile}
+	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: databaseFile}
 	websiteServer := newWilletteAPIServer(userService, soundcloudUrlService)
 	router := router{server: *websiteServer}
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), &router); err != nil {

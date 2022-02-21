@@ -1,14 +1,17 @@
-# andrewwillette.com
+# go andrewwillette.com
 My personal website which hosts my CV and music recordings.
 
-## Build and host the website
+## Installation and startup
 * Ensure `go` is available in your `$PATH`.
-* Ensure `npm` is available in your `$PATH`.
-* With the current directory inside the `scripts` folder, execute the `startProd.sh` script.
-* With the current directory inside the `scripts` folder, execute the `initAdmin.sh` script. You will be prompted for a username/password for the websites admin privileges.
+* Execute `go install`
+* Execute `go build .`
+* Execute `./willette_api`
 
-## Backend directory
-* REST API written in Go for managing admins and music recordings.
+## Database management
+The rest api uses a sqlite database for persistence of users and music data.
 
-## Frontend directory
-* Single page react app written in Typescript, served with an express.js server. Has a dependency on the above REST API for displaying music.
+The database location is conditional. If the directory `/goApp/db` exists, it is used as the location for the sqlite database. This directory is created in the Docker image, and is used to persist the sqlite database between docker deployments. The below example assumes `~/db` is the desired location for the database on the hostOS.
+
+```bash
+docker run -p 9099:9099 -d -v ~/db:/goApp/db imagename
+```

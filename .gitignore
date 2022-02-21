@@ -1,5 +1,4 @@
-backend/backend
-backend/willette_api
+willette_api
 *.db
 *.log
 *nohup.out
