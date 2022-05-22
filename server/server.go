@@ -3,10 +3,15 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/andrewwillette/willette_api/config"
 	"github.com/andrewwillette/willette_api/logging"
 	"github.com/andrewwillette/willette_api/persistence"
-	"net/http"
+	"github.com/labstack/echo/v4"
+	"github.com/newrelic/go-agent/v3/integrations/nrecho-v4"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 const (
@@ -17,9 +22,10 @@ const (
 	updateSoundcloudUrlsEndpoint = "/update-soundcloud-urls"
 )
 
+// userService manages logging users in and authenticating tokens
 type userService interface {
-	Login(username, password string) (success bool, willetteToken string)
-	IsAuthorized(willetteToken string) bool
+	Login(username, password string) (success bool, authToken string)
+	IsAuthorized(authToken string) bool
 }
 
 type soundcloudUrlService interface {
@@ -29,17 +35,34 @@ type soundcloudUrlService interface {
 	UpdateSoundcloudUiOrders([]persistence.SoundcloudUrl) error
 }
 
-type willetteAPIServer struct {
+type webServices struct {
 	userService          userService
 	soundcloudUrlService soundcloudUrlService
 }
 
 type router struct {
-	server willetteAPIServer
+	server webServices
 }
 
-func newWilletteAPIServer(userService userService, soundcloudUrlService soundcloudUrlService) *willetteAPIServer {
-	return &willetteAPIServer{userService: userService, soundcloudUrlService: soundcloudUrlService}
+func newWebServices(userService userService, soundcloudUrlService soundcloudUrlService) *webServices {
+	return &webServices{
+		userService:          userService,
+		soundcloudUrlService: soundcloudUrlService,
+	}
+}
+
+func getNewRelicApp() *newrelic.Application {
+	logging.GlobalLogger.Info().Msg("Starting up new relic")
+	newrelicLicense := os.Getenv("NEW_RELIC_LICENSE")
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("go-andrewwillette"),
+		newrelic.ConfigLicense(newrelicLicense),
+		// newrelic.ConfigDebugLogger(os.Stdout),
+	)
+	if err != nil {
+		logging.GlobalLogger.Error().Msgf("Failed to start new relic app, newrelic key: %s", newrelicLicense)
+	}
+	return app
 }
 
 func RunServer() {
@@ -47,38 +70,64 @@ func RunServer() {
 	persistence.InitDatabaseIdempotent(databaseFile)
 	userService := &persistence.UserService{SqliteDbFile: databaseFile}
 	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: databaseFile}
-	websiteServer := newWilletteAPIServer(userService, soundcloudUrlService)
-	router := router{server: *websiteServer}
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), &router); err != nil {
-		logging.GlobalLogger.Err(err).Msg(fmt.Sprintf("Failed to run willetteAPIServer on port: %d", config.Port))
-		logging.GlobalLogger.Fatal().Msg("Server failed to start. Exiting application.")
-		return
-	}
+
+	websiteServices := newWebServices(userService, soundcloudUrlService)
+	e := echo.New()
+	e.Use(nrecho.Middleware(getNewRelicApp()))
+	e.GET(getSoundcloudAllEndpoint, websiteServices.getAllSoundcloudUrlsEcho)
+	e.POST(loginEndpoint, websiteServices.getAllSoundcloudUrlsEcho)
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
+
+	// router := router{server: *websiteServer}
+	// if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), &router); err != nil {
+	// 	logging.GlobalLogger.Err(err).Msg(fmt.Sprintf("Failed to run willetteAPIServer on port: %d", config.Port))
+	// 	logging.GlobalLogger.Fatal().Msg("Server failed to start. Exiting application.")
+	// 	return
+	// }
 }
 
-func (u *willetteAPIServer) getAllSoundcloudUrls(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application-json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func (u *webServices) getAllSoundcloudUrlsEcho(c echo.Context) error {
+	c.Response().Header().Set("Content-Type", "application-json")
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	defReqHeaders(c)
 	urls, err := u.soundcloudUrlService.GetAllSoundcloudUrls()
-	addDefaultRequestHeaders(w, r)
 	if err != nil {
-		logging.GlobalLogger.Err(err).Msg("Failed to get soundcloud urls from service.")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		const errMsg = "Failed to get soundcloud urls from service."
+		logging.GlobalLogger.Err(err).Msg(errMsg)
+		return c.String(http.StatusInternalServerError, errMsg)
 	}
-	var soundcloudUrls []SoundcloudUrlUiOrderJson
+	var soundcloudUrls = []SoundcloudUrlUiOrderJson{}
 	for _, url := range urls {
 		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlUiOrderJson{Url: url.Url, UiOrder: url.UiOrder})
 	}
-	if err = json.NewEncoder(w).Encode(soundcloudUrls); err != nil {
-		logging.GlobalLogger.Err(err).Msg("Failed to encode soundcloud urls in http response.")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	return
+
+	c.Response().WriteHeader(http.StatusOK)
+	return json.NewEncoder(c.Response()).Encode(soundcloudUrls)
 }
 
-func (u *willetteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Request) {
+// func (u *webServices) getAllSoundcloudUrls(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application-json")
+// 	w.Header().Set("Access-Control-Allow-Origin", "*")
+// 	urls, err := u.soundcloudUrlService.GetAllSoundcloudUrls()
+// 	addDefaultRequestHeaders(w, r)
+// 	if err != nil {
+// 		logging.GlobalLogger.Err(err).Msg("Failed to get soundcloud urls from service.")
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		return
+// 	}
+// 	var soundcloudUrls []SoundcloudUrlUiOrderJson
+// 	for _, url := range urls {
+// 		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlUiOrderJson{Url: url.Url, UiOrder: url.UiOrder})
+// 	}
+// 	if err = json.NewEncoder(w).Encode(soundcloudUrls); err != nil {
+// 		logging.GlobalLogger.Err(err).Msg("Failed to encode soundcloud urls in http response.")
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		return
+// 	}
+// 	return
+// }
+
+func (u *webServices) addSoundcloudUrl(w http.ResponseWriter, r *http.Request) {
 	logging.GlobalLogger.Info().Msg("addSoundcloudUrl called.")
 	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
@@ -110,7 +159,7 @@ func (u *willetteAPIServer) addSoundcloudUrl(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (u *willetteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
+func (u *webServices) deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
 	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
@@ -143,7 +192,7 @@ func (u *willetteAPIServer) deleteSoundcloudUrlPost(w http.ResponseWriter, r *ht
 /**
 Update soundcloud url uiOrder values.
 */
-func (u *willetteAPIServer) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r *http.Request) {
+func (u *webServices) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r *http.Request) {
 	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
@@ -169,7 +218,37 @@ func (u *willetteAPIServer) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r
 	}
 }
 
-func (u *willetteAPIServer) login(w http.ResponseWriter, r *http.Request) {
+func (u *webServices) loginEcho(c echo.Context) error {
+	defReqHeaders(c)
+	if c.Request().Method == "OPTIONS" {
+		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
+	}
+	var userCredentials UserJson
+	if err := json.NewDecoder(c.Request().Body).Decode(&userCredentials); err != nil {
+		const errMsg = "Error decoding user credentials from request body."
+		logging.GlobalLogger.Info().Msg(errMsg)
+
+		return c.String(http.StatusInternalServerError, errMsg)
+	}
+	c.Response().Header().Set("Content-Type", "application-json")
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
+	user := UserJson{Username: userCredentials.Username, Password: userCredentials.Password}
+	loginSuccessful, authToken := u.userService.Login(user.Username, user.Password)
+	if loginSuccessful {
+		if err := json.NewEncoder(c.Response()).Encode(authToken); err != nil {
+			const errMsg = "Failed to encode authToken after successful authentication."
+			logging.GlobalLogger.Err(err).Msg(errMsg)
+			return c.String(http.StatusUnauthorized, errMsg)
+		}
+		logging.GlobalLogger.Info().Msg("Login Successful.")
+		return c.String(http.StatusOK, "")
+	} else {
+		logging.GlobalLogger.Info().Msg(fmt.Sprintf("Login failed with username: %s, password: %s", user.Username, user.Password))
+		return c.String(http.StatusUnauthorized, "Login Failed.")
+	}
+}
+func (u *webServices) login(w http.ResponseWriter, r *http.Request) {
 	addDefaultRequestHeaders(w, r)
 	if r.Method == "OPTIONS" {
 		return
@@ -207,20 +286,20 @@ func (u *willetteAPIServer) login(w http.ResponseWriter, r *http.Request) {
 
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logging.GlobalLogger.Info().Msg(fmt.Sprintf("HTTP Request received. Path: %s", req.URL.Path))
-	switch req.URL.Path {
-	case getSoundcloudAllEndpoint:
-		r.server.getAllSoundcloudUrls(w, req)
-	case addSoundcloudEndpoint:
-		r.server.addSoundcloudUrl(w, req)
-	case deleteSoundcloudEndpoint:
-		r.server.deleteSoundcloudUrlPost(w, req)
-	case loginEndpoint:
-		r.server.login(w, req)
-	case updateSoundcloudUrlsEndpoint:
-		r.server.updateSoundcloudUrlUiOrders(w, req)
-	default:
-		http.Error(w, "404 not found", http.StatusNotFound)
-	}
+	// switch req.URL.Path {
+	// case getSoundcloudAllEndpoint:
+	// 	r.server.getAllSoundcloudUrls(w, req)
+	// case addSoundcloudEndpoint:
+	// 	r.server.addSoundcloudUrl(w, req)
+	// case deleteSoundcloudEndpoint:
+	// 	r.server.deleteSoundcloudUrlPost(w, req)
+	// case loginEndpoint:
+	// 	r.server.login(w, req)
+	// case updateSoundcloudUrlsEndpoint:
+	// 	r.server.updateSoundcloudUrlUiOrders(w, req)
+	// default:
+	// 	http.Error(w, "404 not found", http.StatusNotFound)
+	// }
 }
 
 /**
@@ -235,4 +314,17 @@ func addDefaultRequestHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
+func defReqHeaders(c echo.Context) {
+	c.Response().Header().Set("Content-Type", "application-json")
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	for _, originUrl := range config.GetCorsWhiteList() {
+		if c.Request().Header.Get("origin") == originUrl {
+			c.Response().Header().Set("Access-Control-Allow-Origin", originUrl)
+		}
+	}
+	c.Response().Header().Set("Content-Type", "application/json")
+	c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	c.Response().Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }

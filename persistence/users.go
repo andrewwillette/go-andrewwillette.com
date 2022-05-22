@@ -173,26 +173,26 @@ func (u *UserService) userExists(user *User) bool {
 	}
 }
 
-func (u *UserService) Login(username, password string) (success bool, bearerToken string) {
-	user := &User{Username: username, Password: password}
-	userExists := u.userExists(user)
+func (u *UserService) Login(username, password string) (success bool, authToken string) {
+	user := User{Username: username, Password: password}
+	userExists := u.userExists(&user)
 	if userExists {
-		key := newSHA1Hash()
-		u.updateUserBearerToken(user.Username, user.Password, key)
-		return true, key
+		authToken := newSHA1Hash()
+		u.updateUserBearerToken(user.Username, user.Password, authToken)
+		return true, authToken
 	} else {
 		return false, ""
 	}
 }
 
-func (u *UserService) IsAuthorized(bearerToken string) bool {
+func (u *UserService) IsAuthorized(authToken string) bool {
 	db, err := sql.Open("sqlite3", u.SqliteDbFile)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error opening database")
 		return false
 	}
 	defer db.Close()
-	bearerTokenExists := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE bearerToken = "%s")`, userTable, bearerToken)
+	bearerTokenExists := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE bearerToken = "%s")`, userTable, authToken)
 	preparedStatement, err := db.Prepare(bearerTokenExists)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error preparing bearerTokenExists sql statement")
