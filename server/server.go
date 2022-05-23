@@ -10,6 +10,7 @@ import (
 	"github.com/andrewwillette/willette_api/logging"
 	"github.com/andrewwillette/willette_api/persistence"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/newrelic/go-agent/v3/integrations/nrecho-v4"
 	"github.com/newrelic/go-agent/v3/newrelic"
 )
@@ -40,10 +41,6 @@ type webServices struct {
 	soundcloudUrlService soundcloudUrlService
 }
 
-type router struct {
-	server webServices
-}
-
 func newWebServices(userService userService, soundcloudUrlService soundcloudUrlService) *webServices {
 	return &webServices{
 		userService:          userService,
@@ -65,25 +62,23 @@ func getNewRelicApp() *newrelic.Application {
 	return app
 }
 
-func RunServer() {
+func StartServer() {
 	databaseFile := config.GetDatabaseFile()
 	persistence.InitDatabaseIdempotent(databaseFile)
 	userService := &persistence.UserService{SqliteDbFile: databaseFile}
 	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: databaseFile}
-
 	websiteServices := newWebServices(userService, soundcloudUrlService)
+
 	e := echo.New()
 	e.Use(nrecho.Middleware(getNewRelicApp()))
+	e.Use(middleware.CORSWithConfig(middleware.DefaultCORSConfig))
 	e.GET(getSoundcloudAllEndpoint, websiteServices.getAllSoundcloudUrlsEcho)
-	e.POST(loginEndpoint, websiteServices.getAllSoundcloudUrlsEcho)
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
+	e.POST(loginEndpoint, websiteServices.loginEcho)
+	e.PUT(addSoundcloudEndpoint, websiteServices.addSoundcloudUrlEcho)
+	e.DELETE(deleteSoundcloudEndpoint, websiteServices.deleteSoundcloudUrlPostEcho)
+	e.PUT(updateSoundcloudUrlsEndpoint, websiteServices.updateSoundcloudUrlUiOrdersEcho)
 
-	// router := router{server: *websiteServer}
-	// if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), &router); err != nil {
-	// 	logging.GlobalLogger.Err(err).Msg(fmt.Sprintf("Failed to run willetteAPIServer on port: %d", config.Port))
-	// 	logging.GlobalLogger.Fatal().Msg("Server failed to start. Exiting application.")
-	// 	return
-	// }
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
 }
 
 func (u *webServices) getAllSoundcloudUrlsEcho(c echo.Context) error {
@@ -105,121 +100,93 @@ func (u *webServices) getAllSoundcloudUrlsEcho(c echo.Context) error {
 	return json.NewEncoder(c.Response()).Encode(soundcloudUrls)
 }
 
-// func (u *webServices) getAllSoundcloudUrls(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application-json")
-// 	w.Header().Set("Access-Control-Allow-Origin", "*")
-// 	urls, err := u.soundcloudUrlService.GetAllSoundcloudUrls()
-// 	addDefaultRequestHeaders(w, r)
-// 	if err != nil {
-// 		logging.GlobalLogger.Err(err).Msg("Failed to get soundcloud urls from service.")
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		return
-// 	}
-// 	var soundcloudUrls []SoundcloudUrlUiOrderJson
-// 	for _, url := range urls {
-// 		soundcloudUrls = append(soundcloudUrls, SoundcloudUrlUiOrderJson{Url: url.Url, UiOrder: url.UiOrder})
-// 	}
-// 	if err = json.NewEncoder(w).Encode(soundcloudUrls); err != nil {
-// 		logging.GlobalLogger.Err(err).Msg("Failed to encode soundcloud urls in http response.")
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		return
-// 	}
-// 	return
-// }
-
-func (u *webServices) addSoundcloudUrl(w http.ResponseWriter, r *http.Request) {
+func (u *webServices) addSoundcloudUrlEcho(c echo.Context) error {
 	logging.GlobalLogger.Info().Msg("addSoundcloudUrl called.")
-	addDefaultRequestHeaders(w, r)
-	if r.Method == "OPTIONS" {
-		return
+	defReqHeaders(c)
+	if c.Request().Method == "OPTIONS" {
+		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
-	decoder := json.NewDecoder(r.Body)
+
 	var soundcloudData SoundcloudUrlJson
-	err := decoder.Decode(&soundcloudData)
-	logging.GlobalLogger.Info().Msg(fmt.Sprintf("%+v", soundcloudData))
-	if err != nil {
-		logging.GlobalLogger.Info().Msg("Failed to decode soundcloud data.")
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(c.Request().Body).Decode(&soundcloudData); err != nil {
+		const errMsg = "Error decoding soundcloud url from request body."
+		logging.GlobalLogger.Info().Msg(errMsg)
+		return c.String(http.StatusInternalServerError, errMsg)
 	}
-	if u.userService.IsAuthorized(r.Header.Get("Authorization")) {
+	if u.userService.IsAuthorized(c.Request().Header.Get("Authorization")) {
 		logging.GlobalLogger.Info().Msg("WilletteToken is valid.")
 		err := u.soundcloudUrlService.AddSoundcloudUrl(soundcloudData.Url)
 		if err != nil {
-			logging.GlobalLogger.Err(err).Msg("Error when adding soundcloud url to service layer.")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			const errMsg = "Error when adding soundcloud url to service layer."
+			logging.GlobalLogger.Err(err).Msg(errMsg)
+			return c.String(http.StatusInternalServerError, errMsg)
 		}
 		logging.GlobalLogger.Info().Msg(fmt.Sprintf("Success adding soundcloud url. url: %s", soundcloudData.Url))
-		return
+		return c.String(http.StatusOK, "Successfuly added soundcloud URL")
 	} else {
-		logging.GlobalLogger.Info().Msg("WilletteToken is invalid.")
-		w.WriteHeader(http.StatusUnauthorized)
-		return
+		const errMsg = "Invalid auth token is invalid."
+		logging.GlobalLogger.Info().Msg(errMsg)
+		return c.String(http.StatusUnauthorized, errMsg)
 	}
 }
 
-func (u *webServices) deleteSoundcloudUrlPost(w http.ResponseWriter, r *http.Request) {
-	addDefaultRequestHeaders(w, r)
-	if r.Method == "OPTIONS" {
-		return
+func (u *webServices) deleteSoundcloudUrlPostEcho(c echo.Context) error {
+	defReqHeaders(c)
+	if c.Request().Method == "OPTIONS" {
+		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
-	decoder := json.NewDecoder(r.Body)
 	var soundcloudData SoundcloudUrlJson
-	err := decoder.Decode(&soundcloudData)
-	if err != nil {
-		logging.GlobalLogger.Info().Msg("Failed to decode soundcloud data in delete.")
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(c.Request().Body).Decode(&soundcloudData); err != nil {
+		const errMsg = "Error decoding soundcloud url from request body."
+		logging.GlobalLogger.Info().Msg(errMsg)
+		return c.String(http.StatusInternalServerError, errMsg)
 	}
-	if u.userService.IsAuthorized(r.Header.Get("Authorization")) {
-		err = u.soundcloudUrlService.DeleteSoundcloudUrl(soundcloudData.Url)
+	if u.userService.IsAuthorized(c.Request().Header.Get("Authorization")) {
+		err := u.soundcloudUrlService.DeleteSoundcloudUrl(soundcloudData.Url)
 		if err != nil {
-			logging.GlobalLogger.Err(err).Msg("Error deleting soundcloudUrl in service layer.")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			switch err.(type) {
+			case *persistence.SoundcloudUrlMissingError:
+				const errMsg = "Provided url does not exist to delete."
+				logging.GlobalLogger.Err(err).Msg(errMsg)
+				return c.String(http.StatusBadRequest, errMsg)
+			default:
+				const errMsg = "Error deleting soundcloudUrl."
+				logging.GlobalLogger.Err(err).Msg(errMsg)
+				return c.String(http.StatusInternalServerError, errMsg)
+			}
 		}
 		logging.GlobalLogger.Info().Msg(fmt.Sprintf("deleteSoundcloudUrl called successfully for item: %s", soundcloudData.Url))
-		return
+		return c.String(http.StatusOK, "Successfully deleted soundcloud url")
 	} else {
-		logging.GlobalLogger.Info().
-			Msg(fmt.Sprintf("deleteSoundcloudUrl called unauthorized for item: %s, WilletteToken: %s", soundcloudData.Url, r.Header.Get("Authorization")))
-		w.WriteHeader(http.StatusUnauthorized)
-		return
+		var errMsg = fmt.Sprintf("deleteSoundcloudUrl called unauthorized for item: %s, authToken: %s", soundcloudData.Url, c.Request().Header.Get("Authorization"))
+		logging.GlobalLogger.Info().Msg(errMsg)
+		return c.String(http.StatusUnauthorized, errMsg)
 	}
 }
 
-/**
-Update soundcloud url uiOrder values.
-*/
-func (u *webServices) updateSoundcloudUrlUiOrders(w http.ResponseWriter, r *http.Request) {
-	addDefaultRequestHeaders(w, r)
-	if r.Method == "OPTIONS" {
-		return
-	}
-	if r.Method != "PUT" {
-		logging.GlobalLogger.Info().Msg(fmt.Sprintf("Update soundcloudUrls must be PUT method. Method provided: %s", r.Method))
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
+func (u *webServices) updateSoundcloudUrlUiOrdersEcho(c echo.Context) error {
+	if c.Request().Method == "OPTIONS" {
+		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
 	var urls []SoundcloudUrlUiOrderJson
-	if err := json.NewDecoder(r.Body).Decode(&urls); err != nil {
-		logging.GlobalLogger.Info().Msg("Error decoding soundcloud urls in update soundcloud urls.")
-		http.Error(w, "Error decoding soundcloud urls.", http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(c.Request().Body).Decode(&urls); err != nil {
+		const errMsg = "Error decoding soundcloud urls in update soundcloud urls."
+		logging.GlobalLogger.Info().Msg(errMsg)
+		return c.String(http.StatusBadRequest, errMsg)
 	}
 	var persistenceUrls []persistence.SoundcloudUrl
 	for _, v := range urls {
 		persistenceUrls = append(persistenceUrls, persistence.SoundcloudUrl{Url: v.Url, UiOrder: v.UiOrder})
 	}
 	if err := u.soundcloudUrlService.UpdateSoundcloudUiOrders(persistenceUrls); err != nil {
-		http.Error(w, "Error decoding soundcloud urls.", http.StatusBadRequest)
-		logging.GlobalLogger.Err(err).Msg("Error updating soundcloud urls.")
+		const errMsg = "Error updating soundcloud urls."
+		logging.GlobalLogger.Err(err).Msg(errMsg)
+		return c.String(http.StatusInternalServerError, errMsg)
 	}
+	return c.String(http.StatusOK, "Sucessfully updated soundcloud url values")
 }
 
 func (u *webServices) loginEcho(c echo.Context) error {
-	defReqHeaders(c)
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
@@ -241,65 +208,12 @@ func (u *webServices) loginEcho(c echo.Context) error {
 			logging.GlobalLogger.Err(err).Msg(errMsg)
 			return c.String(http.StatusUnauthorized, errMsg)
 		}
-		logging.GlobalLogger.Info().Msg("Login Successful.")
+		logging.GlobalLogger.Info().Msgf("Login Successful. username: %s", userCredentials.Username)
 		return c.String(http.StatusOK, "")
 	} else {
 		logging.GlobalLogger.Info().Msg(fmt.Sprintf("Login failed with username: %s, password: %s", user.Username, user.Password))
 		return c.String(http.StatusUnauthorized, "Login Failed.")
 	}
-}
-func (u *webServices) login(w http.ResponseWriter, r *http.Request) {
-	addDefaultRequestHeaders(w, r)
-	if r.Method == "OPTIONS" {
-		return
-	}
-	if r.Method != "POST" {
-		logging.GlobalLogger.Info().Msg(fmt.Sprintf("Login not POST method. Method: %s", r.Method))
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	var userCredentials UserJson
-	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
-		logging.GlobalLogger.Info().Msg("Error decoding user credentials from request body.")
-		http.Error(w, fmt.Sprintf("Error decoding user credentials from request body. %v", err), http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application-json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	user := UserJson{Username: userCredentials.Username, Password: userCredentials.Password}
-	loginSuccessful, willetteToken := u.userService.Login(user.Username, user.Password)
-	if loginSuccessful {
-		if err := json.NewEncoder(w).Encode(willetteToken); err != nil {
-			logging.GlobalLogger.Err(err).Msg("Failed to encode WilletteToken after successful authentication.")
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		logging.GlobalLogger.Info().Msg("Login Successful.")
-		return
-	} else {
-		logging.GlobalLogger.Info().Msg(fmt.Sprintf("Login failed with username: %s, password: %s", user.Username, user.Password))
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-}
-
-func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	logging.GlobalLogger.Info().Msg(fmt.Sprintf("HTTP Request received. Path: %s", req.URL.Path))
-	// switch req.URL.Path {
-	// case getSoundcloudAllEndpoint:
-	// 	r.server.getAllSoundcloudUrls(w, req)
-	// case addSoundcloudEndpoint:
-	// 	r.server.addSoundcloudUrl(w, req)
-	// case deleteSoundcloudEndpoint:
-	// 	r.server.deleteSoundcloudUrlPost(w, req)
-	// case loginEndpoint:
-	// 	r.server.login(w, req)
-	// case updateSoundcloudUrlsEndpoint:
-	// 	r.server.updateSoundcloudUrlUiOrders(w, req)
-	// default:
-	// 	http.Error(w, "404 not found", http.StatusNotFound)
-	// }
 }
 
 /**

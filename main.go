@@ -7,5 +7,5 @@ import (
 
 func main() {
 	logging.GlobalLogger.Info().Msg("Starting application.")
-	server.RunServer()
+	server.StartServer()
 }

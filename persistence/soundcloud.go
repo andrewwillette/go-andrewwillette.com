@@ -61,6 +61,12 @@ func (u *SoundcloudUrlService) AddSoundcloudUrl(url string) error {
 	return nil
 }
 
+type SoundcloudUrlMissingError struct {
+	msg string // description of error
+}
+
+func (e *SoundcloudUrlMissingError) Error() string { return e.msg }
+
 func (u *SoundcloudUrlService) DeleteSoundcloudUrl(url string) error {
 	db, err := sql.Open("sqlite3", u.SqliteFile)
 	if err != nil {
@@ -74,10 +80,15 @@ func (u *SoundcloudUrlService) DeleteSoundcloudUrl(url string) error {
 		logging.GlobalLogger.Err(err).Msg("Error preparing delete soundcloud url sql")
 		return err
 	}
-	_, err = deleteSoundcloudPreparedStatement.Exec(url)
+	res, err := deleteSoundcloudPreparedStatement.Exec(url)
 	if err != nil {
 		logging.GlobalLogger.Err(err).Msg("Error executing delete soundcloud url sql")
 		return err
+	}
+	rowsAf, err := res.RowsAffected()
+	if rowsAf <= 0 {
+		logging.GlobalLogger.Error().Msg("No rows deleted with provided soundcloud url.")
+		return &SoundcloudUrlMissingError{msg: "No rows affected"}
 	}
 	return nil
 }
