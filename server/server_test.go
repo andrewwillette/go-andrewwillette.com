@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/andrewwillette/willette_api/persistence"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockUserService struct {
@@ -51,75 +52,79 @@ func (m MockSoundcloudUrlService) UpdateSoundcloudUiOrders(urls []persistence.So
 
 func TestLogin(t *testing.T) {
 	t.Run("invalid user login", func(t *testing.T) {
+		body := UserJson{Username: "hello", Password: "passwordWorld"}
+		var users []UserJson
+		userService := &MockUserService{
+			UsersRegistered: users,
+			LoginFunc: func(username, password string) (success bool, bearerToken string) {
+				return false, ""
+			},
+			IsAuthorizedFunc: func(bearerToken string) bool {
+				return true
+			},
+		}
+		var soundcloudUrls []persistence.SoundcloudUrl
+		soundcloudUrlService := &MockSoundcloudUrlService{
+			SoundcloudUrls: soundcloudUrls,
+		}
 		response := httptest.NewRecorder()
-		// body := UserJson{Username: "hello", Password: "passwordWorld"}
-		// var users []UserJson
-		// userService := &MockUserService{
-		// 	UsersRegistered: users,
-		// 	LoginFunc: func(username, password string) (success bool, bearerToken string) {
-		// 		return false, ""
-		// 	},
-		// 	IsAuthorizedFunc: func(bearerToken string) bool {
-		// 		return true
-		// 	},
-		// }
-		// var soundcloudUrls []persistence.SoundcloudUrl
-		// soundcloudUrlService := &MockSoundcloudUrlService{
-		// 	SoundcloudUrls: soundcloudUrls,
-		// }
-		// server := newWebServices(userService, soundcloudUrlService)
-		// request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
-		// server.login(response, request)
-		// assert.Equal(t, 401, response.Code)
+		request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
+		webServices := newWebServices(userService, soundcloudUrlService)
+		e := getServer(*webServices)
+		e.ServeHTTP(response, request)
+		require.Equal(t, 401, response.Code)
 	})
 
 	t.Run("valid user login", func(t *testing.T) {
-		// var users []UserJson
-		// testBearerToken := "testBearerToken"
-		// userService := &MockUserService{
-		// 	UsersRegistered: users,
-		// 	LoginFunc: func(username, password string) (success bool, bearerToken string) {
-		// 		return true, testBearerToken
-		// 	},
-		// 	IsAuthorizedFunc: func(bearerToken string) bool {
-		// 		return true
-		// 	},
-		// }
-		// var soundcloudUrls []persistence.SoundcloudUrl
-		// soundcloudUrlService := &MockSoundcloudUrlService{
-		// 	SoundcloudUrls: soundcloudUrls,
-		// }
-		// server := newWebServices(userService, soundcloudUrlService)
-		// response := httptest.NewRecorder()
-		// body := UserJson{Username: "hello", Password: "passwordWorld"}
-		// request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
-		// server.login(response, request)
-		// assert.Equal(t, 200, response.Code)
-		// assert.Contains(t, response.Body.String(), testBearerToken)
+		var users []UserJson
+		testBearerToken := "testBearerToken"
+		userService := &MockUserService{
+			UsersRegistered: users,
+			LoginFunc: func(username, password string) (success bool, bearerToken string) {
+				return true, testBearerToken
+			},
+			IsAuthorizedFunc: func(bearerToken string) bool {
+				return true
+			},
+		}
+		var soundcloudUrls []persistence.SoundcloudUrl
+		soundcloudUrlService := &MockSoundcloudUrlService{
+			SoundcloudUrls: soundcloudUrls,
+		}
+		webServices := newWebServices(userService, soundcloudUrlService)
+		response := httptest.NewRecorder()
+		body := UserJson{Username: "hello", Password: "passwordWorld"}
+		request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
+
+		e := getServer(*webServices)
+		e.ServeHTTP(response, request)
+		require.Equal(t, 200, response.Code)
+		require.Contains(t, response.Body.String(), testBearerToken)
 	})
 
 	t.Run("GET returns 405", func(t *testing.T) {
-		// var users []UserJson
-		// testBearerToken := "testBearerToken"
-		// userService := &MockUserService{
-		// 	UsersRegistered: users,
-		// 	LoginFunc: func(username, password string) (success bool, bearerToken string) {
-		// 		return true, testBearerToken
-		// 	},
-		// 	IsAuthorizedFunc: func(bearerToken string) bool {
-		// 		return true
-		// 	},
-		// }
-		// var soundcloudUrls []persistence.SoundcloudUrl
-		// soundcloudUrlService := &MockSoundcloudUrlService{
-		// 	SoundcloudUrls: soundcloudUrls,
-		// }
-		// server := newWebServices(userService, soundcloudUrlService)
-		// response := httptest.NewRecorder()
-		// body := UserJson{Username: "hello", Password: "passwordWorld"}
-		// request := httptest.NewRequest(http.MethodGet, loginEndpoint, userToJSON(body))
-		// server.login(response, request)
-		// assert.Equal(t, 405, response.Code)
+		var users []UserJson
+		testBearerToken := "testBearerToken"
+		userService := &MockUserService{
+			UsersRegistered: users,
+			LoginFunc: func(username, password string) (success bool, bearerToken string) {
+				return true, testBearerToken
+			},
+			IsAuthorizedFunc: func(bearerToken string) bool {
+				return true
+			},
+		}
+		var soundcloudUrls []persistence.SoundcloudUrl
+		soundcloudUrlService := &MockSoundcloudUrlService{
+			SoundcloudUrls: soundcloudUrls,
+		}
+		webServices := newWebServices(userService, soundcloudUrlService)
+		body := UserJson{Username: "hello", Password: "passwordWorld"}
+		e := getServer(*webServices)
+		request := httptest.NewRequest(http.MethodPut, loginEndpoint, userToJSON(body))
+		response := httptest.NewRecorder()
+		e.ServeHTTP(response, request)
+		require.Equal(t, 405, response.Code)
 	})
 }
 func TestAddSoundcloudUrl(t *testing.T) {

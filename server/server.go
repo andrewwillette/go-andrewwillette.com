@@ -49,7 +49,6 @@ func newWebServices(userService userService, soundcloudUrlService soundcloudUrlS
 }
 
 func getNewRelicApp() *newrelic.Application {
-	logging.GlobalLogger.Info().Msg("Starting up new relic")
 	newrelicLicense := os.Getenv("NEW_RELIC_LICENSE")
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName("go-andrewwillette"),
@@ -62,6 +61,18 @@ func getNewRelicApp() *newrelic.Application {
 	return app
 }
 
+func getServer(webServ webServices) *echo.Echo {
+	e := echo.New()
+	e.Use(nrecho.Middleware(getNewRelicApp()))
+	e.Use(middleware.CORSWithConfig(middleware.DefaultCORSConfig))
+	e.GET(getSoundcloudAllEndpoint, webServ.getAllSoundcloudUrlsEcho)
+	e.POST(loginEndpoint, webServ.loginHandler)
+	e.PUT(addSoundcloudEndpoint, webServ.addSoundcloudUrlEcho)
+	e.DELETE(deleteSoundcloudEndpoint, webServ.deleteSoundcloudUrlPostEcho)
+	e.PUT(updateSoundcloudUrlsEndpoint, webServ.updateSoundcloudUrlUiOrdersEcho)
+	return e
+}
+
 func StartServer() {
 	databaseFile := config.GetDatabaseFile()
 	persistence.InitDatabaseIdempotent(databaseFile)
@@ -69,14 +80,7 @@ func StartServer() {
 	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: databaseFile}
 	websiteServices := newWebServices(userService, soundcloudUrlService)
 
-	e := echo.New()
-	e.Use(nrecho.Middleware(getNewRelicApp()))
-	e.Use(middleware.CORSWithConfig(middleware.DefaultCORSConfig))
-	e.GET(getSoundcloudAllEndpoint, websiteServices.getAllSoundcloudUrlsEcho)
-	e.POST(loginEndpoint, websiteServices.loginEcho)
-	e.PUT(addSoundcloudEndpoint, websiteServices.addSoundcloudUrlEcho)
-	e.DELETE(deleteSoundcloudEndpoint, websiteServices.deleteSoundcloudUrlPostEcho)
-	e.PUT(updateSoundcloudUrlsEndpoint, websiteServices.updateSoundcloudUrlUiOrdersEcho)
+	e := getServer(*websiteServices)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
 }
@@ -84,7 +88,6 @@ func StartServer() {
 func (u *webServices) getAllSoundcloudUrlsEcho(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "application-json")
 	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	defReqHeaders(c)
 	urls, err := u.soundcloudUrlService.GetAllSoundcloudUrls()
 	if err != nil {
 		const errMsg = "Failed to get soundcloud urls from service."
@@ -102,7 +105,7 @@ func (u *webServices) getAllSoundcloudUrlsEcho(c echo.Context) error {
 
 func (u *webServices) addSoundcloudUrlEcho(c echo.Context) error {
 	logging.GlobalLogger.Info().Msg("addSoundcloudUrl called.")
-	defReqHeaders(c)
+	// defReqHeaders(c)
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
@@ -131,7 +134,7 @@ func (u *webServices) addSoundcloudUrlEcho(c echo.Context) error {
 }
 
 func (u *webServices) deleteSoundcloudUrlPostEcho(c echo.Context) error {
-	defReqHeaders(c)
+	// defReqHeaders(c)
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
@@ -186,7 +189,8 @@ func (u *webServices) updateSoundcloudUrlUiOrdersEcho(c echo.Context) error {
 	return c.String(http.StatusOK, "Sucessfully updated soundcloud url values")
 }
 
-func (u *webServices) loginEcho(c echo.Context) error {
+func (u *webServices) loginHandler(c echo.Context) error {
+	logging.GlobalLogger.Info().Msg("hitting loginHandler")
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
