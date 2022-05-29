@@ -65,11 +65,11 @@ func getServer(webServ webServices) *echo.Echo {
 	e := echo.New()
 	e.Use(nrecho.Middleware(getNewRelicApp()))
 	e.Use(middleware.CORSWithConfig(middleware.DefaultCORSConfig))
-	e.GET(getSoundcloudAllEndpoint, webServ.getAllSoundcloudUrlsEcho)
+	e.GET(getSoundcloudAllEndpoint, webServ.getAllSoundcloudUrls)
 	e.POST(loginEndpoint, webServ.loginHandler)
-	e.PUT(addSoundcloudEndpoint, webServ.addSoundcloudUrlEcho)
-	e.DELETE(deleteSoundcloudEndpoint, webServ.deleteSoundcloudUrlPostEcho)
-	e.PUT(updateSoundcloudUrlsEndpoint, webServ.updateSoundcloudUrlUiOrdersEcho)
+	e.PUT(addSoundcloudEndpoint, webServ.addSoundcloudUrl)
+	e.DELETE(deleteSoundcloudEndpoint, webServ.deleteSoundcloudUrlPost)
+	e.PUT(updateSoundcloudUrlsEndpoint, webServ.updateSoundcloudUrlUiOrders)
 	return e
 }
 
@@ -85,7 +85,7 @@ func StartServer() {
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
 }
 
-func (u *webServices) getAllSoundcloudUrlsEcho(c echo.Context) error {
+func (u *webServices) getAllSoundcloudUrls(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "application-json")
 	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	urls, err := u.soundcloudUrlService.GetAllSoundcloudUrls()
@@ -103,9 +103,8 @@ func (u *webServices) getAllSoundcloudUrlsEcho(c echo.Context) error {
 	return json.NewEncoder(c.Response()).Encode(soundcloudUrls)
 }
 
-func (u *webServices) addSoundcloudUrlEcho(c echo.Context) error {
-	logging.GlobalLogger.Info().Msg("addSoundcloudUrl called.")
-	// defReqHeaders(c)
+func (u *webServices) addSoundcloudUrl(c echo.Context) error {
+	logging.GlobalLogger.Debug().Msg("addSoundcloudUrl called.")
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
@@ -117,7 +116,7 @@ func (u *webServices) addSoundcloudUrlEcho(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, errMsg)
 	}
 	if u.userService.IsAuthorized(c.Request().Header.Get("Authorization")) {
-		logging.GlobalLogger.Info().Msg("WilletteToken is valid.")
+		logging.GlobalLogger.Debug().Msg("WilletteToken is valid.")
 		err := u.soundcloudUrlService.AddSoundcloudUrl(soundcloudData.Url)
 		if err != nil {
 			const errMsg = "Error when adding soundcloud url to service layer."
@@ -133,8 +132,7 @@ func (u *webServices) addSoundcloudUrlEcho(c echo.Context) error {
 	}
 }
 
-func (u *webServices) deleteSoundcloudUrlPostEcho(c echo.Context) error {
-	// defReqHeaders(c)
+func (u *webServices) deleteSoundcloudUrlPost(c echo.Context) error {
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
@@ -167,7 +165,7 @@ func (u *webServices) deleteSoundcloudUrlPostEcho(c echo.Context) error {
 	}
 }
 
-func (u *webServices) updateSoundcloudUrlUiOrdersEcho(c echo.Context) error {
+func (u *webServices) updateSoundcloudUrlUiOrders(c echo.Context) error {
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
