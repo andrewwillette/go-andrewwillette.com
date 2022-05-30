@@ -23,6 +23,18 @@ const (
 	updateSoundcloudUrlsEndpoint = "/update-soundcloud-urls"
 )
 
+func StartServer() {
+	databaseFile := config.GetDatabaseFile()
+	persistence.InitDatabaseIdempotent(databaseFile)
+	userService := &persistence.UserService{SqliteDbFile: databaseFile}
+	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: databaseFile}
+	websiteServices := newWebServices(userService, soundcloudUrlService)
+
+	e := getServer(*websiteServices)
+
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
+}
+
 // userService manages logging users in and authenticating tokens
 type userService interface {
 	Login(username, password string) (success bool, authToken string)
@@ -61,6 +73,7 @@ func getNewRelicApp() *newrelic.Application {
 	return app
 }
 
+// getServer setup server with endpoints
 func getServer(webServ webServices) *echo.Echo {
 	e := echo.New()
 	e.Use(nrecho.Middleware(getNewRelicApp()))
@@ -68,21 +81,9 @@ func getServer(webServ webServices) *echo.Echo {
 	e.GET(getSoundcloudAllEndpoint, webServ.getAllSoundcloudUrls)
 	e.POST(loginEndpoint, webServ.loginHandler)
 	e.PUT(addSoundcloudEndpoint, webServ.addSoundcloudUrl)
-	e.DELETE(deleteSoundcloudEndpoint, webServ.deleteSoundcloudUrlPost)
+	e.DELETE(deleteSoundcloudEndpoint, webServ.deleteSoundcloudUrl)
 	e.PUT(updateSoundcloudUrlsEndpoint, webServ.updateSoundcloudUrlUiOrders)
 	return e
-}
-
-func StartServer() {
-	databaseFile := config.GetDatabaseFile()
-	persistence.InitDatabaseIdempotent(databaseFile)
-	userService := &persistence.UserService{SqliteDbFile: databaseFile}
-	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: databaseFile}
-	websiteServices := newWebServices(userService, soundcloudUrlService)
-
-	e := getServer(*websiteServices)
-
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
 }
 
 func (u *webServices) getAllSoundcloudUrls(c echo.Context) error {
@@ -132,7 +133,7 @@ func (u *webServices) addSoundcloudUrl(c echo.Context) error {
 	}
 }
 
-func (u *webServices) deleteSoundcloudUrlPost(c echo.Context) error {
+func (u *webServices) deleteSoundcloudUrl(c echo.Context) error {
 	if c.Request().Method == "OPTIONS" {
 		return c.String(http.StatusOK, "Allowing OPTIONS because of prior failed handshaking.")
 	}
