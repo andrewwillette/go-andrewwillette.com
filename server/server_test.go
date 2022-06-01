@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -176,6 +177,50 @@ func TestAddSouncloudUrl_Success(t *testing.T) {
 		{Id: 0, Url: "urlone.com", UiOrder: 1},
 		{Id: 0, Url: "urltwo.com", UiOrder: 3},
 		{Id: 0, Url: "testsoundcloudurl.com", UiOrder: 0}})
+}
+
+func TestGetAllSoundcloudUrls_ServiceErr(t *testing.T) {
+	var users []UserJson
+	testBearerToken := "testBearerToken"
+	userService := &MockUserService{
+		UsersRegistered: users,
+		LoginFunc: func(username, password string) (success bool, bearerToken string) {
+			return true, testBearerToken
+		},
+		IsAuthorizedFunc: func(bearerToken string) bool {
+			return true
+		},
+	}
+	soundcloudUrls := []persistence.SoundcloudUrl{{Url: "urlone.com", UiOrder: 1, Id: 1},
+		{Url: "urltwo.com", Id: 2, UiOrder: 3}}
+	soundcloudUrlService := &MockSoundcloudUrlService{
+		SoundcloudUrls: soundcloudUrls,
+		GetAllSoundcloudUrlsFunc: func() ([]persistence.SoundcloudUrl, error) {
+			return nil, errors.New("Failed to get soundcloudUrls")
+		},
+		AddSoundcloudUrlsFunc: func(s string) error {
+			soundcloudUrl := persistence.SoundcloudUrl{Url: s}
+			soundcloudUrls = append(soundcloudUrls, soundcloudUrl)
+			return nil
+		},
+		DeleteSoundcloudUrlFunc: func(s string) error {
+			return nil
+		},
+	}
+	webServices := newWebServices(userService, soundcloudUrlService)
+	newSoundcloudUrl := "testsoundcloudurl.com"
+	body := SoundcloudUrlJson{Url: newSoundcloudUrl}
+	addSdcldUrlReq := httptest.NewRequest(http.MethodPut, addSoundcloudEndpoint, authenticatedSoundcloudUrlToJSON(body))
+	addSdcldUrlResp := httptest.NewRecorder()
+	e := getServer(*webServices)
+	e.ServeHTTP(addSdcldUrlResp, addSdcldUrlReq)
+	require.Equal(t, 200, addSdcldUrlResp.Code)
+
+	responseTwo := httptest.NewRecorder()
+	requestTwo := httptest.NewRequest(http.MethodGet, getSoundcloudAllEndpoint, nil)
+	e.ServeHTTP(responseTwo, requestTwo)
+	require.Equal(t, 500, responseTwo.Code)
+	require.Equal(t, "Failed to get soundcloud urls from service.", responseTwo.Body.String())
 }
 
 func authenticatedSoundcloudUrlToJSON(url SoundcloudUrlJson) io.Reader {

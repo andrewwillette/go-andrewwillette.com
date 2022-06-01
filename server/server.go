@@ -218,30 +218,3 @@ func (u *webServices) loginHandler(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, "Login Failed.")
 	}
 }
-
-/**
-Headers to add to all responses.
-*/
-func addDefaultRequestHeaders(w http.ResponseWriter, r *http.Request) {
-	for _, originUrl := range config.GetCorsWhiteList() {
-		if r.Header.Get("origin") == originUrl {
-			w.Header().Set("Access-Control-Allow-Origin", originUrl)
-		}
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-}
-
-func defReqHeaders(c echo.Context) {
-	c.Response().Header().Set("Content-Type", "application-json")
-	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	for _, originUrl := range config.GetCorsWhiteList() {
-		if c.Request().Header.Get("origin") == originUrl {
-			c.Response().Header().Set("Access-Control-Allow-Origin", originUrl)
-		}
-	}
-	c.Response().Header().Set("Content-Type", "application/json")
-	c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	c.Response().Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-}
