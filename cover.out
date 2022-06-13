@@ -1,11 +1,4 @@
 mode: set
-github.com/andrewwillette/willette_api/services/aws.go:5.24,7.2 1 1
-github.com/andrewwillette/willette_api/persistence/keygen.go:11.35,13.16 2 1
-github.com/andrewwillette/willette_api/persistence/keygen.go:16.2,21.30 5 1
-github.com/andrewwillette/willette_api/persistence/keygen.go:13.16,15.3 1 1
-github.com/andrewwillette/willette_api/persistence/keygen.go:27.33,29.19 2 1
-github.com/andrewwillette/willette_api/persistence/keygen.go:32.2,32.18 1 1
-github.com/andrewwillette/willette_api/persistence/keygen.go:29.19,31.3 1 1
 github.com/andrewwillette/willette_api/persistence/persistence.go:12.65,14.16 2 1
 github.com/andrewwillette/willette_api/persistence/persistence.go:18.2,19.16 2 1
 github.com/andrewwillette/willette_api/persistence/persistence.go:23.2,25.16 3 1
@@ -166,6 +159,12 @@ github.com/andrewwillette/willette_api/persistence/users.go:214.3,214.8 1 1
 github.com/andrewwillette/willette_api/persistence/users.go:210.17,213.4 2 0
 github.com/andrewwillette/willette_api/persistence/users.go:216.20,218.3 1 1
 github.com/andrewwillette/willette_api/persistence/users.go:218.8,220.3 1 0
+github.com/andrewwillette/willette_api/persistence/keygen.go:11.35,13.16 2 1
+github.com/andrewwillette/willette_api/persistence/keygen.go:16.2,21.30 5 1
+github.com/andrewwillette/willette_api/persistence/keygen.go:13.16,15.3 1 1
+github.com/andrewwillette/willette_api/persistence/keygen.go:27.33,29.19 2 1
+github.com/andrewwillette/willette_api/persistence/keygen.go:32.2,32.18 1 1
+github.com/andrewwillette/willette_api/persistence/keygen.go:29.19,31.3 1 1
 github.com/andrewwillette/willette_api/server/server.go:26.20,36.2 7 0
 github.com/andrewwillette/willette_api/server/server.go:56.102,61.2 1 1
 github.com/andrewwillette/willette_api/server/server.go:63.45,70.16 3 1
@@ -175,7 +174,7 @@ github.com/andrewwillette/willette_api/server/server.go:77.48,87.2 9 1
 github.com/andrewwillette/willette_api/server/server.go:89.66,93.16 4 1
 github.com/andrewwillette/willette_api/server/server.go:98.2,99.27 2 1
 github.com/andrewwillette/willette_api/server/server.go:103.2,104.61 2 1
-github.com/andrewwillette/willette_api/server/server.go:93.16,97.3 3 0
+github.com/andrewwillette/willette_api/server/server.go:93.16,97.3 3 1
 github.com/andrewwillette/willette_api/server/server.go:99.27,101.3 1 1
 github.com/andrewwillette/willette_api/server/server.go:107.62,109.37 2 1
 github.com/andrewwillette/willette_api/server/server.go:113.2,114.82 2 1
@@ -215,11 +214,3 @@ github.com/andrewwillette/willette_api/server/server.go:208.21,209.73 1 1
 github.com/andrewwillette/willette_api/server/server.go:214.3,215.37 2 1
 github.com/andrewwillette/willette_api/server/server.go:209.73,213.4 3 0
 github.com/andrewwillette/willette_api/server/server.go:216.8,219.3 2 1
-github.com/andrewwillette/willette_api/server/server.go:225.71,226.54 1 0
-github.com/andrewwillette/willette_api/server/server.go:231.2,233.134 3 0
-github.com/andrewwillette/willette_api/server/server.go:226.54,227.42 1 0
-github.com/andrewwillette/willette_api/server/server.go:227.42,229.4 1 0
-github.com/andrewwillette/willette_api/server/server.go:236.36,239.54 3 0
-github.com/andrewwillette/willette_api/server/server.go:244.2,246.145 3 0
-github.com/andrewwillette/willette_api/server/server.go:239.54,240.52 1 0
-github.com/andrewwillette/willette_api/server/server.go:240.52,242.4 1 0
