@@ -14,6 +14,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.0.0 // indirect
+	github.com/andrewwillette/keyOfDay v0.0.0-20220613025935-334cb8c152ea // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.3.3 // indirect

@@ -69,7 +69,7 @@ func TestLogin_InvalidUser(t *testing.T) {
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
 	webServices := newWebServices(userService, soundcloudUrlService)
-	e := getServer(*webServices)
+	e := newServer(*webServices)
 	e.ServeHTTP(response, request)
 	require.Equal(t, 401, response.Code)
 }
@@ -95,7 +95,7 @@ func TestLogin_SuccessfulLogin(t *testing.T) {
 	body := UserJson{Username: "hello", Password: "passwordWorld"}
 	request := httptest.NewRequest(http.MethodPost, loginEndpoint, userToJSON(body))
 
-	e := getServer(*webServices)
+	e := newServer(*webServices)
 	e.ServeHTTP(response, request)
 	require.Equal(t, 200, response.Code)
 	require.Contains(t, response.Body.String(), testBearerToken)
@@ -119,7 +119,7 @@ func TestLogin_InvalidHttpRequests(t *testing.T) {
 	}
 	webServices := newWebServices(userService, soundcloudUrlService)
 	body := UserJson{Username: "hello", Password: "passwordWorld"}
-	e := getServer(*webServices)
+	e := newServer(*webServices)
 	request := httptest.NewRequest(http.MethodPut, loginEndpoint, userToJSON(body))
 	response := httptest.NewRecorder()
 	e.ServeHTTP(response, request)
@@ -159,7 +159,7 @@ func TestAddSouncloudUrl_Success(t *testing.T) {
 	body := SoundcloudUrlJson{Url: newSoundcloudUrl}
 	addSdcldUrlReq := httptest.NewRequest(http.MethodPut, addSoundcloudEndpoint, authenticatedSoundcloudUrlToJSON(body))
 	addSdcldUrlResp := httptest.NewRecorder()
-	e := getServer(*webServices)
+	e := newServer(*webServices)
 	e.ServeHTTP(addSdcldUrlResp, addSdcldUrlReq)
 	require.Equal(t, 200, addSdcldUrlResp.Code)
 	responseTwo := httptest.NewRecorder()
@@ -178,6 +178,9 @@ func TestAddSouncloudUrl_Success(t *testing.T) {
 		{Id: 0, Url: "testsoundcloudurl.com", UiOrder: 0}})
 }
 
+// func TestGetAllSoundcloudUrls_ServiceError(t *testing.T) {
+// 	this works still. does it help my hand?
+// }
 func authenticatedSoundcloudUrlToJSON(url SoundcloudUrlJson) io.Reader {
 	marshalledUser, _ := json.Marshal(url)
 	return bytes.NewReader(marshalledUser)

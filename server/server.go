@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/andrewwillette/keyOfDay/key"
 	"github.com/andrewwillette/willette_api/config"
 	"github.com/andrewwillette/willette_api/logging"
 	"github.com/andrewwillette/willette_api/persistence"
@@ -19,6 +20,7 @@ const (
 	getSoundcloudAllEndpoint     = "/get-soundcloud-urls"
 	addSoundcloudEndpoint        = "/add-soundcloud-url"
 	deleteSoundcloudEndpoint     = "/delete-soundcloud-url"
+	keyOfDayEndpoint             = "/keyOfDay"
 	loginEndpoint                = "/login"
 	updateSoundcloudUrlsEndpoint = "/update-soundcloud-urls"
 )
@@ -30,30 +32,35 @@ func StartServer() {
 	soundcloudUrlService := &persistence.SoundcloudUrlService{SqliteFile: databaseFile}
 	websiteServices := newWebServices(userService, soundcloudUrlService)
 
-	e := getServer(*websiteServices)
+	e := newServer(*websiteServices)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Port)))
 }
 
-// userService manages logging users in and authenticating tokens
-type userService interface {
+// authService manages logging users in and authenticating tokens
+type authService interface {
 	Login(username, password string) (success bool, authToken string)
 	IsAuthorized(authToken string) bool
 }
 
-type soundcloudUrlService interface {
+type musicService interface {
 	GetAllSoundcloudUrls() ([]persistence.SoundcloudUrl, error)
 	AddSoundcloudUrl(string) error
 	DeleteSoundcloudUrl(string) error
 	UpdateSoundcloudUiOrders([]persistence.SoundcloudUrl) error
 }
 
-type webServices struct {
-	userService          userService
-	soundcloudUrlService soundcloudUrlService
+type keyOfDayService interface {
+	GetKeyOfDay() string
 }
 
-func newWebServices(userService userService, soundcloudUrlService soundcloudUrlService) *webServices {
+type webServices struct {
+	userService          authService
+	soundcloudUrlService musicService
+	keyOfDayService      keyOfDayService
+}
+
+func newWebServices(userService authService, soundcloudUrlService musicService) *webServices {
 	return &webServices{
 		userService:          userService,
 		soundcloudUrlService: soundcloudUrlService,
@@ -73,17 +80,24 @@ func getNewRelicApp() *newrelic.Application {
 	return app
 }
 
-// getServer setup server with endpoints
-func getServer(webServ webServices) *echo.Echo {
+// newServer setup server with endpoints
+func newServer(services webServices) *echo.Echo {
 	e := echo.New()
 	e.Use(nrecho.Middleware(getNewRelicApp()))
 	e.Use(middleware.CORSWithConfig(middleware.DefaultCORSConfig))
-	e.GET(getSoundcloudAllEndpoint, webServ.getAllSoundcloudUrls)
-	e.POST(loginEndpoint, webServ.loginHandler)
-	e.PUT(addSoundcloudEndpoint, webServ.addSoundcloudUrl)
-	e.DELETE(deleteSoundcloudEndpoint, webServ.deleteSoundcloudUrl)
-	e.PUT(updateSoundcloudUrlsEndpoint, webServ.updateSoundcloudUrlUiOrders)
+	e.GET(getSoundcloudAllEndpoint, services.getAllSoundcloudUrls)
+	e.GET(keyOfDayEndpoint, services.getKeyOfDay)
+	e.POST(loginEndpoint, services.loginHandler)
+	e.PUT(addSoundcloudEndpoint, services.addSoundcloudUrl)
+	e.DELETE(deleteSoundcloudEndpoint, services.deleteSoundcloudUrl)
+	e.PUT(updateSoundcloudUrlsEndpoint, services.updateSoundcloudUrlUiOrders)
 	return e
+}
+
+func (u *webServices) getKeyOfDay(c echo.Context) error {
+	c.Response().Header().Set("Content-Type", "application-json")
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	return c.String(http.StatusOK, key.GetKeyOfDay())
 }
 
 func (u *webServices) getAllSoundcloudUrls(c echo.Context) error {
