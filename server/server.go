@@ -95,9 +95,15 @@ func newServer(services webServices) *echo.Echo {
 }
 
 func (u *webServices) getKeyOfDay(c echo.Context) error {
+	logging.GlobalLogger.Info().Msg("Calling key of day.")
 	c.Response().Header().Set("Content-Type", "application-json")
 	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	return c.String(http.StatusOK, key.GetKeyOfDay())
+	if err := json.NewEncoder(c.Response()).Encode(key.GetKeyOfDay()); err != nil {
+		const errMsg = "Failed to encode keyOfDay string"
+		logging.GlobalLogger.Err(err).Msg(errMsg)
+		return c.String(http.StatusInternalServerError, errMsg)
+	}
+	return c.String(http.StatusOK, "")
 }
 
 func (u *webServices) getAllSoundcloudUrls(c echo.Context) error {
